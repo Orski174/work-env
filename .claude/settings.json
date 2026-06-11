@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "allow": [
+      "Bash(make setup)",
+      "Bash(make new-task:*)",
+      "Bash(make paths)",
+      "Bash(make check)",
+      "Bash(make clean)",
+      "Bash(make help)",
+      "Bash(scripts/new-task.sh:*)",
+      "Bash(scripts/paths.sh)",
+      "Bash(scripts/check.sh)",
+      "Bash(bin/we:*)"
+    ]
+  }
+}

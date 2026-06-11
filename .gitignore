@@ -48,6 +48,11 @@ vendor/*
 tasks/**/output/*
 !tasks/**/output/.gitkeep
 
+# ---- Claude Code (commit CLAUDE.md, commands, shared settings.json) ----
+.claude/settings.local.json
+.claude/tmp/
+.claude/cache/
+
 # ---- OS / editor ----
 .DS_Store
 Thumbs.db
