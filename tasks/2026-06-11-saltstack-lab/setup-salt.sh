@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
-# Assign Salt roles to the two provisioned VMs and start services.
+# Install Salt and assign roles to the two provisioned VMs, then start services.
 #
-# boxman applies cloud-init at the template level, so both clones boot with
-# salt-master + salt-minion installed but DISABLED and identity-less. This
-# script differentiates them:
-#   - salt-master VM: start the salt-master service
-#   - salt-minion VM: point /etc/salt/minion at the master, start salt-minion
+# The boxman template is intentionally Salt-free (see boxman/conf.yml for why),
+# so this script does the Salt install over SSH on each running VM, from the
+# official Broadcom repo pinned to the 3008 LTS series:
+#   - salt-master VM: install + start salt-master
+#   - salt-minion VM: install salt-minion, point it at the master, start it
 # then wait for the minion's key to show up as pending on the master.
 #
 # Key acceptance is left as a manual step (the instructive bit) unless --accept
@@ -15,7 +15,6 @@
 #   ./setup-salt.sh [--accept]
 set -euo pipefail
 
-HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 WORKSPACE="${SALT_LAB_WORKSPACE:-$HOME/workspaces/salt-lab}"
 ACCEPT=0
 [ "${1:-}" = "--accept" ] && ACCEPT=1
@@ -42,12 +41,24 @@ echo ">> minion host alias: $MINION_HOST"
 m() { ssh -F "$SSH_CONFIG" -o LogLevel=ERROR "$MASTER_HOST" "$@"; }   # run on master
 n() { ssh -F "$SSH_CONFIG" -o LogLevel=ERROR "$MINION_HOST" "$@"; }   # run on minion
 
-# --- sanity: salt actually baked into the image? ---
-if ! m 'command -v salt-master' >/dev/null 2>&1; then
-  echo "ERROR: salt-master not installed on the master VM — template build/cloud-init likely failed." >&2
-  echo "       Check /var/log/cloud-init-output.log inside the VM." >&2
-  exit 1
-fi
+# Snippet: configure the official Salt repo (Broadcom), pinned to 3008 LTS.
+read -r -d '' SALT_REPO <<'EOS' || true
+set -e
+sudo mkdir -m 755 -p /etc/apt/keyrings
+curl -fsSL https://packages.broadcom.com/artifactory/api/security/keypair/SaltProjectKey/public \
+  | sudo gpg --dearmor -o /etc/apt/keyrings/salt-archive-keyring.pgp
+curl -fsSL https://github.com/saltstack/salt-install-guide/releases/latest/download/salt.sources \
+  | sudo tee /etc/apt/sources.list.d/salt.sources >/dev/null
+printf 'Package: salt-*\nPin: version 3008.*\nPin-Priority: 1001\n' \
+  | sudo tee /etc/apt/preferences.d/salt-pin-1001 >/dev/null
+sudo apt-get update -q
+EOS
+
+# --- install + start the master ---
+echo ">> [master] installing salt-master (official repo, 3008 LTS) ..."
+m "$SALT_REPO"$'\n'"sudo DEBIAN_FRONTEND=noninteractive apt-get install -y salt-master"
+echo ">> [master] starting salt-master ..."
+m 'sudo systemctl enable --now salt-master'
 
 # --- master's IP on the nat1 lab network (192.168.77.x) ---
 MASTER_IP="$(m "ip -4 -o addr show | awk '{print \$4}' | cut -d/ -f1 | grep '^192.168.77.' | head -1")"
@@ -57,15 +68,13 @@ if [ -z "$MASTER_IP" ]; then
 fi
 echo ">> master IP (lab net): $MASTER_IP"
 
-# --- configure + start the master ---
-echo ">> starting salt-master ..."
-m 'sudo systemctl enable --now salt-master'
-
-# --- point the minion at the master, give it a stable id, start it ---
-echo ">> configuring + starting salt-minion ..."
+# --- install the minion, point it at the master, start it ---
+echo ">> [minion] installing salt-minion (official repo, 3008 LTS) ..."
+n "$SALT_REPO"$'\n'"sudo DEBIAN_FRONTEND=noninteractive apt-get install -y salt-minion"
+echo ">> [minion] configuring + starting salt-minion ..."
 n "printf 'master: %s\nid: salt-minion\n' '$MASTER_IP' | sudo tee /etc/salt/minion.d/master.conf >/dev/null"
 n 'sudo systemctl enable --now salt-minion'
-n 'sudo systemctl restart salt-minion'   # pick up config if it was already running
+n 'sudo systemctl restart salt-minion'   # pick up config
 
 # --- wait for the minion key to register as pending on the master ---
 echo ">> waiting for minion key to reach the master ..."

@@ -17,15 +17,17 @@ KVM + libvirt where boxman provisions the VMs. Workflow: edit here → `git push
 
 ## External repos / dependencies
 
-- **boxman** — `$REPOS_ROOT/boxman` on sc1 (`~/git/boxman`). The lab is defined in
-  `boxman/conf.yml`. boxman drives libvirt/KVM to build a golden Ubuntu 24.04
-  template (Salt baked in) and clone two VMs from it.
+- **boxman** — `$REPOS_ROOT/boxman` on sc1 (`~/git/boxman`), run from the `boxman`
+  conda env (`~/.conda/envs/boxman/bin/boxman`). The lab is defined in
+  `boxman/conf.yml`. boxman drives libvirt/KVM to build a minimal golden Ubuntu
+  24.04 template and clone two VMs from it; Salt is installed afterwards by
+  `setup-salt.sh`.
 
 ## Layout
 
 ```text
 boxman/conf.yml   the lab: 1 template + cluster of 2 VMs (salt-master, salt-minion)
-setup-salt.sh     post-provision: assign roles, start services, wait for minion key
+setup-salt.sh     post-provision: install Salt, assign roles, start services, wait for key
 run.sh            thin driver around boxman (up / setup / ping / ssh / destroy)
 salt/states/      Salt states (.sls) — the demo state (step 3)
 salt/pillar/      Salt pillar data (step 3)
@@ -40,8 +42,8 @@ pip install -e ~/git/boxman          # or however boxman is set up on sc1
 
 cd ~/git/work-env/tasks/2026-06-11-saltstack-lab
 
-./run.sh up        # build template (Salt baked in via cloud-init) + clone 2 VMs
-./run.sh setup     # assign roles, start salt-master + salt-minion, show pending key
+./run.sh up        # build minimal template + clone the 2 VMs
+./run.sh setup     # install Salt, assign roles, start services, show pending key
 # accept the minion key by hand (the instructive step):
 ./run.sh ssh salt-master
 #   sudo salt-key -L && sudo salt-key -A -y && sudo salt '*' test.ping
@@ -52,12 +54,18 @@ cd ~/git/work-env/tasks/2026-06-11-saltstack-lab
 
 ## Why two phases (boxman up, then setup-salt.sh)
 
-boxman applies cloud-init at the **template** level, then clones that template to
-create each VM — so cloud-init is *shared* and can't make one node a master and
-the other a minion. The template therefore boots both VMs with `salt-master` +
-`salt-minion` installed (official Broadcom repo, pinned 3008 LTS) but **disabled**
-and identity-less; `setup-salt.sh` then enables the right service per node and
-points the minion at the master.
+Two reasons Salt is installed *post-provision* rather than baked into the template:
+
+1. **cloud-init is template-level.** boxman applies cloud-init once to the golden
+   image, then clones it — so it can't differentiate a master from a minion at boot.
+2. **The template build polls the cloud-init "done marker" for only 120s (hardcoded
+   in this boxman version), and on a miss it skips the template shutdown and then
+   fails to clone the still-running template.** A full Salt `apt` install can't finish
+   in 120s, so baking it in races-and-loses that poll and corrupts the provision.
+
+So the template stays minimal (marker lands in seconds) and `setup-salt.sh` installs
+Salt over SSH on each running VM (official Broadcom repo, pinned 3008 LTS): it starts
+`salt-master` on one node and points `salt-minion` at the master on the other.
 
 ## Inputs
 
