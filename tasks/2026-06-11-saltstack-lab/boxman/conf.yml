@@ -1,0 +1,174 @@
+---
+# Salt master/minion lab — boxman cluster definition.
+#
+# Two Ubuntu 24.04 VMs cloned from a single golden template that has Salt
+# (master + minion) baked in via cloud-init from the official Broadcom repo,
+# pinned to the 3008 LTS series. Roles (which service runs where) are assigned
+# AFTER provisioning by ../setup-salt.sh, because boxman applies cloud-init at
+# the TEMPLATE level — both VMs share one image, so they can't be differentiated
+# at boot.
+#
+# Intended to run on sc1 (scds001). Run from the task root:
+#   boxman --conf boxman/conf.yml up
+#   ../setup-salt.sh           # assign roles, start services
+#
+# Provider settings match the proven local-runtime config on these hosts
+# (use_sudo: True, qemu:///system).
+version: '1.0'
+project: salt-lab
+
+provider:
+  libvirt:
+    uri: qemu:///system
+    use_sudo: True
+    virt_install_cmd: '/usr/bin/python /usr/bin/virt-install'
+    virt_clone_cmd: '/usr/bin/python /usr/bin/virt-clone'
+    virsh_cmd: '/bin/virsh'
+    verbose: True
+
+templates:
+  salt_base:
+    name: ubuntu-24.04-salt-base
+    image:
+      uri: http://cloud-images-archive.ubuntu.com/releases/noble/release-20240423/ubuntu-24.04-server-cloudimg-amd64.img
+      checksum: sha256:32a9d30d18803da72f5936cf2b7b9efcb4d0bb63c67933f17e3bdfd1751de3f3
+    disk_size: 20G
+    os_variant: ubuntu24.04
+    memory: 2048
+    vcpus: 2
+    # boxman waits until this marker exists in the guest before declaring the
+    # template ready. The cloud-init runcmd writes it as its last step.
+    cloudinit_done_marker: /var/log/salt-cloudinit.log
+    cloudinit: |
+      #cloud-config
+      hostname: salt-base
+      manage_etc_hosts: true
+
+      network:
+        version: 2
+        ethernets:
+          default:
+            match:
+              name: "en*"
+            dhcp4: true
+            dhcp6: false
+
+      users:
+        - name: ubuntu
+          lock_passwd: false
+          groups: [sudo]
+          sudo: "ALL=(ALL) NOPASSWD:ALL"
+          shell: /bin/bash
+
+      chpasswd:
+        expire: false
+        list: |
+          ubuntu:ubuntu
+
+      ssh_pwauth: true
+      package_update: true
+      packages:
+        - qemu-guest-agent
+        - openssh-server
+        - curl
+        - ca-certificates
+        - gnupg
+
+      write_files:
+        # Pin Salt to the 3008 LTS series so clones are reproducible.
+        - path: /etc/apt/preferences.d/salt-pin-1001
+          permissions: "0644"
+          content: |
+            Package: salt-*
+            Pin: version 3008.*
+            Pin-Priority: 1001
+        - path: /etc/systemd/system/systemd-networkd-wait-online.service.d/override.conf
+          permissions: "0644"
+          content: |
+            [Service]
+            ExecStart=
+            ExecStart=/usr/lib/systemd/systemd-networkd-wait-online --any
+
+      runcmd:
+        - rm -f /etc/cloud/cloud.cfg.d/99-disable-network-config.cfg
+        - rm -f /etc/cloud/cloud.cfg.d/subiquity-disable-cloudinit-networking.cfg
+        - systemctl daemon-reload
+        - systemctl enable --now qemu-guest-agent
+        - netplan generate || true
+        - netplan apply || true
+        - dhclient -v || true
+        # --- Install Salt (official Broadcom repo, pinned 3008 LTS) ---
+        - mkdir -m 755 -p /etc/apt/keyrings
+        - [ sh, -c, "curl -fsSL https://packages.broadcom.com/artifactory/api/security/keypair/SaltProjectKey/public | gpg --dearmor -o /etc/apt/keyrings/salt-archive-keyring.pgp" ]
+        - [ sh, -c, "curl -fsSL https://github.com/saltstack/salt-install-guide/releases/latest/download/salt.sources -o /etc/apt/sources.list.d/salt.sources" ]
+        - apt-get update
+        - [ sh, -c, "DEBIAN_FRONTEND=noninteractive apt-get install -y salt-master salt-minion" ]
+        # --- Make this a clean golden image ---
+        # Stop + disable both services and wipe per-host identity (minion_id,
+        # PKI keys) so each clone regenerates its own. Roles are assigned later
+        # by setup-salt.sh.
+        - systemctl stop salt-master salt-minion || true
+        - systemctl disable salt-master salt-minion || true
+        - rm -f /etc/salt/minion_id
+        - [ sh, -c, "rm -rf /etc/salt/pki/minion/* /etc/salt/pki/master/*" ]
+        # admin user (used by boxman for ssh/ansible)
+        - [ sh, -c, "id admin >/dev/null 2>&1 || useradd -m -d /admin -s /bin/bash -g admin -G sudo admin" ]
+        - [ sh, -c, "echo 'admin ALL=(ALL) NOPASSWD:ALL' > /etc/sudoers.d/admin" ]
+        - [ sh, -c, "chmod 0440 /etc/sudoers.d/admin" ]
+        - [ sh, -c, "echo 'admin:{{ env(\"BOXMAN_ADMIN_PASS\", default=\"boxman\") }}' | chpasswd" ]
+        - [ sh, -c, "mkdir -p /admin/.ssh && chmod 700 /admin/.ssh && chown -R admin:admin /admin /admin/.ssh" ]
+        # Verify salt landed, then write the done-marker boxman waits on.
+        - [ sh, -c, "command -v salt-master && command -v salt-minion && echo \"salt-base ready $(date -Is)\" >> /var/log/salt-cloudinit.log" ]
+
+workspace:
+  path: ~/workspaces/salt-lab
+
+clusters:
+  cluster_1:
+    base_image: ubuntu-24.04-salt-base
+    proxy_host: localhost
+    admin_user: admin
+    admin_pass: {{ env("BOXMAN_ADMIN_PASS", default="boxman") }}
+    admin_key_name: id_ed25519_boxman    # generated automatically at provisioning time
+    ssh_config: ssh_config               # generated automatically at provisioning time
+
+    networks:
+      nat1:
+        mode: nat
+        bridge:
+          stp: 'on'
+          delay: '0'
+        mac: '52:54:00:00:77:01'
+        ip:
+          address: '192.168.77.1'
+          netmask: '255.255.255.0'
+          dhcp:
+            range:
+              start: '192.168.77.2'
+              end: '192.168.77.254'
+        enable: True
+        autostart: True
+
+    vms:
+      salt-master:
+        hostname: salt-master
+        cpus:
+          sockets: 1
+          cores: 2
+          threads: 1
+        memory: 2048
+        network_adapters:
+          - name: adapter_1
+            link_state: 'up'
+            network_source: 'nat1'
+      salt-minion:
+        hostname: salt-minion
+        cpus:
+          sockets: 1
+          cores: 2
+          threads: 1
+        memory: 2048
+        network_adapters:
+          - name: adapter_1
+            link_state: 'up'
+            network_source: 'nat1'
