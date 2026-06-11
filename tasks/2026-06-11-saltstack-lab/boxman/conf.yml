@@ -39,6 +39,9 @@ templates:
     # boxman waits until this marker exists in the guest before declaring the
     # template ready. The cloud-init runcmd writes it as its last step.
     cloudinit_done_marker: /var/log/salt-cloudinit.log
+    # The template build installs Salt via apt inside the VM; give it more than
+    # the 300s default so the build doesn't time out mid-install.
+    cloudinit_timeout: 900
     cloudinit: |
       #cloud-config
       hostname: salt-base
