@@ -1,0 +1,67 @@
+# ---- Secrets / environment ----
+.env
+.env.*
+!.env.example
+*.secret
+secrets/
+credentials.json
+*.pem
+*.key
+
+# ---- Python ----
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+build/
+dist/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+
+# ---- Virtual environments ----
+.venv/
+venv/
+env/
+ENV/
+
+# ---- Local data (keep dir structure, ignore contents) ----
+data/raw/*
+data/processed/*
+!data/raw/.gitkeep
+!data/processed/.gitkeep
+
+# ---- Outputs / logs (ignore contents) ----
+outputs/*
+!outputs/.gitkeep
+logs/*
+!logs/.gitkeep
+
+# ---- Vendored / external local repos ----
+vendor/*
+!vendor/.gitkeep
+!vendor/README.md
+
+# ---- Per-task working dirs (input/output are scratch) ----
+tasks/**/output/*
+!tasks/**/output/.gitkeep
+
+# ---- OS / editor ----
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+.idea/
+.vscode/
+*.sublime-*
+
+# ---- Temporary files ----
+*.tmp
+*.temp
+*.bak
+*.log
+tmp/
+.cache/

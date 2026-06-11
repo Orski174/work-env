@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+# `we` — tiny dispatcher for common work-env actions.
+# Put bin/ on your PATH, or call as ./bin/we <cmd>.
+set -euo pipefail
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+
+cmd="${1:-help}"; shift || true
+case "$cmd" in
+  new)    exec "$ROOT/scripts/new-task.sh" "$@" ;;
+  paths)  exec "$ROOT/scripts/paths.sh" "$@" ;;
+  check)  exec "$ROOT/scripts/check.sh" "$@" ;;
+  help|*)
+    cat <<EOF
+we — work-env helper
+
+  we new <short-name>   scaffold a new task dir
+  we paths              print repo paths
+  we check              run sanity checks
+  we help               this help
+EOF
+    ;;
+esac

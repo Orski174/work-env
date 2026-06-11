@@ -1,0 +1,11 @@
+# Starter dependencies for work-env. Keep this lightweight.
+# Add task-specific deps here, or install per-task in a task venv.
+
+python-dotenv>=1.0   # load .env into os.environ
+requests>=2.31       # HTTP for quick scripts
+
+# Common-but-optional (uncomment when needed):
+# rich>=13.0         # nicer terminal output
+# typer>=0.12        # quick CLIs
+# pandas>=2.0        # tabular data
+# ipython>=8.0       # better REPL / notebooks
