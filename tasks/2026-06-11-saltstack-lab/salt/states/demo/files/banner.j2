@@ -1,0 +1,15 @@
+{#- Rendered by Salt's file.managed (template: jinja) on the minion.
+    Demonstrates reading both grains (minion facts) and pillar (master data). -#}
+# /etc/salt-demo.conf — MANAGED BY SALT, DO NOT EDIT BY HAND.
+# Rendered on {{ grains['fqdn'] }} from salt://demo/files/banner.j2
+
+[host]
+id      = {{ grains['id'] }}
+os      = {{ grains['os'] }} {{ grains['osrelease'] }}
+kernel  = {{ grains['kernelrelease'] }}
+cpus    = {{ grains['num_cpus'] }}
+
+[demo]
+owner       = {{ pillar['demo']['owner'] }}
+environment = {{ pillar['demo']['environment'] }}
+message     = {{ pillar['demo']['message'] }}
