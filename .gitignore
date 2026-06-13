@@ -70,3 +70,6 @@ Thumbs.db
 *.log
 tmp/
 .cache/
+
+# ---- boxman generated artifacts ----
+conf.rendered.yml

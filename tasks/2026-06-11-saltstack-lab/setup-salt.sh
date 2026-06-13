@@ -72,13 +72,20 @@ echo ">> master IP (lab net): $MASTER_IP"
 echo ">> [minion] installing salt-minion (official repo, 3008 LTS) ..."
 n "$SALT_REPO"$'\n'"sudo DEBIAN_FRONTEND=noninteractive apt-get install -y salt-minion"
 echo ">> [minion] configuring + starting salt-minion ..."
+# The apt postinst auto-starts salt-minion with the default master ('salt') and
+# id=hostname, caching a stale /etc/salt/minion_id and PKI. Stop it, write our
+# config, then wipe that stale identity so the minion registers exactly once as
+# 'salt-minion' against the real master — otherwise the master caches a key that
+# mismatches and rejects the minion.
+n 'sudo systemctl stop salt-minion 2>/dev/null || true'
 n "printf 'master: %s\nid: salt-minion\n' '$MASTER_IP' | sudo tee /etc/salt/minion.d/master.conf >/dev/null"
+n 'sudo rm -f /etc/salt/minion_id; sudo rm -rf /etc/salt/pki/minion/*'
 n 'sudo systemctl enable --now salt-minion'
-n 'sudo systemctl restart salt-minion'   # pick up config
 
 # --- wait for the minion key to register as pending on the master ---
-echo ">> waiting for minion key to reach the master ..."
-for _ in $(seq 1 30); do
+# A fresh minion takes ~20-40s to generate keys and reach the master.
+echo ">> waiting for minion key to reach the master (up to ~120s) ..."
+for _ in $(seq 1 60); do
   if m 'sudo salt-key -L' 2>/dev/null | grep -q 'salt-minion'; then break; fi
   sleep 2
 done
@@ -91,7 +98,11 @@ echo "========================================================="
 if [ "$ACCEPT" -eq 1 ]; then
   echo ">> accepting all pending keys (--accept) ..."
   m 'sudo salt-key -A -y'
-  echo ">> verifying with test.ping ..."
+  echo ">> verifying with test.ping (minion needs a few seconds after accept) ..."
+  for _ in $(seq 1 10); do
+    if m "sudo salt '*' test.ping" 2>/dev/null | grep -q 'True'; then break; fi
+    sleep 3
+  done
   m "sudo salt '*' test.ping"
 else
   cat <<EOF
