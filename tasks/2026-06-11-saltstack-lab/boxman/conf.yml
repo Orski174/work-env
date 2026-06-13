@@ -92,6 +92,11 @@ templates:
         - [ sh, -c, "chmod 0440 /etc/sudoers.d/admin" ]
         - [ sh, -c, "echo 'admin:{{ env("BOXMAN_ADMIN_PASS", default="boxman") }}' | chpasswd" ]
         - [ sh, -c, "mkdir -p /admin/.ssh && chmod 700 /admin/.ssh && chown -R admin:admin /admin /admin/.ssh" ]
+        # Reset machine-id so every clone regenerates a UNIQUE one at first boot.
+        # Otherwise all clones share the template's machine-id, systemd-networkd
+        # derives the same DHCP DUID from it, and they collide on a single IP.
+        - truncate -s 0 /etc/machine-id
+        - [ sh, -c, "rm -f /var/lib/dbus/machine-id && ln -s /etc/machine-id /var/lib/dbus/machine-id" ]
         # Last step: write the done-marker boxman waits on.
         - [ sh, -c, "echo \"salt-base ready $(date -Is)\" >> /var/log/salt-cloudinit.log" ]
 
