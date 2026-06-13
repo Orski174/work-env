@@ -52,6 +52,15 @@ cd ~/git/work-env/tasks/2026-06-11-saltstack-lab
 
 `./run.sh setup --accept` auto-accepts the key and runs `test.ping` instead.
 
+Apply the demo state (install a package + manage a templated config file) and
+prove idempotency:
+
+```bash
+./run.sh sync          # push salt/states -> master:/srv/salt, salt/pillar -> /srv/pillar
+./run.sh apply demo    # first apply  -> changes (htop installed, config written)
+./run.sh apply demo    # second apply -> NO changes (idempotent)
+```
+
 ## Why two phases (boxman up, then setup-salt.sh)
 
 Two reasons Salt is installed *post-provision* rather than baked into the template:
