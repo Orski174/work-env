@@ -1,0 +1,7 @@
+# Terraform working files + state + generated artifacts — never commit these.
+.terraform/
+.terraform.lock.hcl
+terraform.tfstate.d/
+*.tfstate
+*.tfstate.*
+env-*.txt
