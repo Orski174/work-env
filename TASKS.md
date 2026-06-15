@@ -18,6 +18,14 @@ Create task dirs with `make new-task name=short-name`.
 
 <!-- Add entries below -->
 
+### 2026-06-15 — terraform-workspaces-eval
+
+- **Dir:** tasks/2026-06-15-terraform-workspaces-eval/
+- **Goal:** Tech-scout Terraform workspaces for prod/staging separation vs. duplication. Tracks scds-infra #87.
+- **Status:** done — concept + comparison + hands-on (state isolation proven locally) + recommendation in `findings.md` (paste-ready for the ticket).
+- **External repos:** (none)
+- **Notes:** Greenfield, target S3 backend, single account / naming-separated, prod+staging only. Recommendation: conditional yes (workspaces defensible since same account) with "wrong workspace" guardrails; escape hatch to dir-per-env if envs ever need separate creds/accounts. `demo/` uses the `hashicorp/local` provider (local backend) and proves isolation locally.
+
 ### 2026-06-11 — saltstack-lab
 
 - **Dir:** tasks/2026-06-11-saltstack-lab/
