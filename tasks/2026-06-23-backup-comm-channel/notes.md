@@ -1,190 +1,180 @@
-# Backup Communication Channel — Comparison
+# Backup Communication Channel — Comparison (rev. 2)
 
-Tracks scds-infra #26. Evaluating Matrix, Discord, Slack, and Signal as a backup channel
-for a small technical team (~5–10 people, some non-technical) whose primary tool (Slack-like)
-goes down.
+Tracks scds-infra #26.
+
+**Updated context (rev. 2):**
+- Current primary: **Microsoft Teams** (M365)
+- Planned new primary: **Signal** (outcome of this evaluation, rev. 1)
+- This revision re-evaluates backup options knowing Signal will be the main channel.
+
+Signal drops out as a backup candidate — it can't be both primary and backup.
+The backup must be independent of both M365 infrastructure and Signal Foundation servers.
+
+---
+
+## Why the primary matters for backup selection
+
+**Teams reliability:** 23 incidents since Jan 2025, including a 19-hour cascading outage
+in July 2025 that took down Teams, Exchange, and Azure together.
+([messageware.com analysis](https://www.messageware.com/microsofts-july-2025-outage-a-19-hour-disruption/))
+The backup for Teams needs to be off M365 entirely.
+
+**Signal reliability:** Generally good for a small team. A few outages per year, mostly
+25 min–3 hr range. ([isdown.app/signal](https://isdown.app/status/signal))
+The backup for Signal needs to be off Signal Foundation infrastructure — i.e. self-hosted
+or on a platform with no dependency on Signal's servers.
+
+**Transition period:** While migrating from Teams → Signal, Teams can serve as a natural
+fallback for Signal outages (everyone still has it, nothing to set up). Once Teams is
+decommissioned, you need a permanent backup for Signal.
 
 ---
 
 ## Matrix (Element)
 
 **Self-hosting vs. hosted / data control**
-Fully self-hostable via Synapse (Python + PostgreSQL) or the lighter Conduit (Rust).
-Docker Compose + Traefik is sufficient; no Kubernetes required.
-Requires a publicly routable server and a domain name.
-Data lives on your homeserver — you own it entirely.
-Managed alternatives: matrix.org free account (shared infra, Element/Matrix controls data),
-[etke.cc](https://etke.cc/) (no per-user charges, FOSS-based), Element Matrix Services (EMS,
-for organisations). ([matrix.org hosting ecosystem](https://matrix.org/ecosystem/hosting/))
+Fully self-hostable via Synapse (Python + PostgreSQL) or Conduit (Rust, lighter).
+Docker Compose on a VPS is sufficient. Requires a publicly routable server and domain.
+Data lives on your homeserver — fully independent of M365 and Signal Foundation.
+Managed options: [etke.cc](https://etke.cc/) (no per-user charges), EMS (for orgs),
+matrix.org free account (Element/Matrix controls data, shared infra).
+([matrix.org hosting ecosystem](https://matrix.org/ecosystem/hosting/))
 
 **Setup friction**
-Admin: moderate — needs a VPS, domain, DNS records, and Synapse config.
-Getting sliding sync (required for Element X) needs PostgreSQL specifically.
-[2025 self-hosting write-up](https://blog.klein.ruhr/self-hosting-matrix-in-2025) describes it
-as finally seamless but still a real ops task.
-User onboarding: once the homeserver is up, users install Element X and register — straightforward.
+Admin: moderate. VPS + domain + Synapse config + PostgreSQL for sliding sync.
+[2025 self-hosting write-up](https://blog.klein.ruhr/self-hosting-matrix-in-2025) calls it
+"finally seamless" but it's still an ops task.
+User onboarding: install Element X, register on your homeserver. Manageable.
 
 **Mobile app quality**
-Element X (iOS and Android) is the current recommended app; Element Classic is legacy.
-User reviews describe it as "clunky but functional" (Google Play, March 2026).
-Improved significantly over 2024–2025 but still lags behind Slack/Signal in polish.
+Element X (iOS and Android). "Clunky but functional" per March 2026 Android reviews.
+Improving steadily but still behind Signal in polish.
 ([Element X on Google Play](https://play.google.com/store/apps/details?id=io.element.android.x))
 
 **Cost**
-Self-hosting: ~$5–10/mo VPS + ~$10–15/yr domain.
-Resource footprint is light for small teams: <350 MB RAM, <1% CPU on a single-user instance.
-etke.cc: no per-user fees; pricing on their site.
-matrix.org free account: £0, but shared infrastructure.
+Self-host: ~$5–10/mo VPS + ~$10–15/yr domain. Light footprint: <350 MB RAM for a small team.
+([self-hosting-matrix-in-2025](https://blog.klein.ruhr/self-hosting-matrix-in-2025))
 
 **Reliability as a backup**
-If self-hosted on the same infra as your primary tool, it goes down together — defeats the purpose.
-Self-host on an external VPS, or use a managed provider, and it's independent.
-No VPN required. Federation means you can always fall back to matrix.org as a bridge.
+Infrastructure is entirely under your control and independent from both M365 and Signal.
+A Signal outage or M365 outage has no impact on your Matrix homeserver.
+No VPN required. Works on any internet connection.
 
 **Federation / interop**
-Fully federated open protocol — users on different homeservers can join the same room.
-Strong interop story: Matrix bridges to Slack, Discord, IRC, etc. exist.
+Fully federated open protocol. Matrix bridges to Teams and Signal both exist, which
+could be useful during the Teams → Signal migration period.
 
-**Verdict: conditional fit**
-Best option if you already run a homeserver or have a sysadmin willing to set one up.
-Overkill admin overhead for a pure backup channel if starting from scratch.
-The data-sovereignty story is the strongest of the four.
+**Verdict: good fit**
+The only option that puts you in full control of both the data and the infrastructure.
+Independent from both current primary (Teams/M365) and incoming primary (Signal).
+Aligns with the direction of travel (moving off commercial platforms).
+Admin overhead is the price — justified here because it's a permanent, long-lived backup,
+not a throwaway.
 
 ---
 
 ## Discord
 
 **Self-hosting vs. hosted / data control**
-No self-hosting. All data lives on Discord's (Discord Inc.) servers.
-ToS is consumer-oriented — no DPA, no GDPR data processing agreement for free tier,
-no audit logs, no SSO. Not designed for business compliance.
+No self-hosting. Data lives on Discord Inc. servers.
+Independent from M365 and Signal Foundation — an outage on either doesn't affect Discord.
+No GDPR DPA or compliance tooling on the free tier; consumer ToS.
 
 **Setup friction**
-Admin: near-zero — create a server in two minutes, share an invite link.
-User onboarding: create a Discord account (email only, no phone required). Very familiar to
-most people under 40; non-technical users typically know it from gaming/communities.
+Admin: near-zero — create a server, share an invite link.
+User onboarding: create a Discord account (email only, no phone required). Familiar to
+most technical users.
 
 **Mobile app quality**
-Excellent. One of the most polished consumer messaging apps; fast, reliable, well-designed.
-Consistently 4.4–4.6 on iOS and Android.
+Excellent. Consistently 4.4–4.6 on iOS and Android.
 
 **Cost**
-Free tier: unlimited members, unlimited message history, 100 servers, 8MB upload limit,
-video calls up to 25 participants.
-Nitro ($2.99–$9.99/mo) is personal — no team billing tier.
+Free tier: unlimited members, unlimited message history, 8 MB uploads, calls up to 25.
 ([Discord pricing 2026](https://costbench.com/software/communication/discord/))
+No per-seat business tier; Nitro is individual.
 
 **Reliability as a backup**
-18 incidents in the past 90 days (9 major outages, 9 minor), median outage duration ~53 min.
+18 incidents in the past 90 days (9 major outages, 9 minor), median ~53 min.
 ([statusfield.com/is-down/discord](https://statusfield.com/is-down/discord))
-Reliability is decent but not enterprise-grade. An outage during an incident where you need
-your backup is plausible.
-No VPN required.
+More outage-prone than Signal. For a backup channel you only need it when the primary
+is already down — having the backup also flaky is a real risk.
 
 **Federation / interop**
-None. Closed platform. No interop with other tools.
+None. Closed platform.
 
-**Verdict: weak fit**
-Fine informally if the team already uses Discord personally.
-The reliability record (frequent minor outages) is a concern for a backup channel — you don't
-want the backup down when you need it. ToS is consumer-focused which may matter for sensitive comms.
+**Verdict: acceptable, not ideal**
+Easy to spin up and free, but the reliability record is the weakest of the candidates.
+Fine if you need something running in the next hour with zero admin overhead. Less suitable
+as the permanent backup for a team that just chose Signal over Teams for reliability reasons.
 
 ---
 
 ## Slack
 
 **Self-hosting vs. hosted / data control**
-No self-hosting. Data lives on Slack (Salesforce) servers.
-Enterprise Key Management (EKM) available only on Enterprise Grid (large organisations).
+No self-hosting. Data on Slack (Salesforce) servers.
+Independent from M365 and Signal Foundation.
 
 **Setup friction**
-Admin: create a workspace (2 min). Users join via invite link.
-User onboarding: trivial for anyone who has used Slack.
+Admin: create a workspace. User onboarding: trivial.
 
 **Mobile app quality**
-Excellent. Best-in-class mobile experience among the four.
+Excellent. Best-in-class among the four.
 
 **Cost**
-Free tier: 90-day message history (older messages hidden, not deleted), 10 app integrations,
-5 GB file storage total, 1:1 calls only.
-Pro: $7.25/user/mo; Business+: $12.50/user/mo.
-([Slack pricing 2026](https://viewexport.com/post/slack-pricing),
-[free tier limits](https://slack.com/help/articles/27204752526611-Feature-limitations-on-the-free-version-of-Slack))
+Free tier: 90-day message history cap, 10 integrations, 5 GB storage, 1:1 calls only.
+Pro: $7.25/user/mo.
+([Slack pricing 2026](https://viewexport.com/post/slack-pricing))
 
 **Reliability as a backup**
-**Fatal flaw**: if your primary channel is Slack, a Slack outage takes out both simultaneously.
-Even if your primary is something else, Slack's free tier lacks persistent history and call
-features — it's a degraded experience as a backup.
+Infrastructure is independent of M365 and Signal. Generally reliable.
+But the free tier's 90-day history cap is a real limitation — if the backup sits unused
+for a few months, older context is hidden.
 
 **Federation / interop**
-None. Closed platform.
+None.
 
 **Verdict: bad fit**
-Using Slack as a backup for Slack is a non-starter.
-Using Slack as a backup for another tool: the 90-day history cap and 1:1-only calls
-on the free tier make it a weak secondary option. Pay-to-fix, and you're paying per seat.
+Costs money for a usable experience (free tier history cap degrades over time).
+The team just moved off a Teams-class commercial platform — adding Slack, another
+commercial tool with its own SaaS lock-in, as a backup is a step backward.
+No meaningful advantage over Discord except app polish, which doesn't justify the cost.
 
 ---
 
-## Signal
+## Signal (for reference — now the primary, not evaluated as backup)
 
-**Self-hosting vs. hosted / data control**
-No self-hosting in practice. Source code is open, but the production infrastructure runs
-on Signal Foundation's servers — you cannot federate or run your own instance.
-([Can you self-host Signal?](https://softwaremill.com/can-you-self-host-the-signal-server/))
-Data is end-to-end encrypted; Signal Foundation has minimal metadata access by design.
-
-**Setup friction**
-Admin: zero — create a group, add members, done. No server to provision.
-User onboarding: install app, verify phone number. Requires a mobile phone number (no
-email-only accounts). Minor friction for users without a personal mobile they want to
-register; non-issue for most.
-
-**Mobile app quality**
-Excellent. Consistently 4.8 on iOS, 4.5+ on Android. Clean, fast, minimal UI.
-Desktop: dramatically improved in 2025–2026 — full multi-device sync without requiring
-the phone to be online. ([Signal 2026 features](https://aboutsignal.com/news/whats-next-for-signal-in-2026-these-handy-features-are-coming-soon/))
-
-**Cost**
-Free. Nonprofit (Signal Foundation). No paid tiers.
-
-**Reliability as a backup**
-Runs on infrastructure entirely independent from your team's stack.
-Signal Foundation servers are rarely down — significantly better uptime than Discord.
-No VPN required. Works over any internet connection.
-Groups: up to 1,000 members. Calls: up to 75 participants (raised Feb 2026).
-([call limit announcement](https://aboutsignal.com/news/signal-raises-limit-for-audio-and-video-calls-to-75-participants/))
-
-**Federation / interop**
-None. Centralized, closed protocol. No bridges or interop.
-
-**Verdict: good fit**
-Ideal backup channel for a small team. Completely independent infrastructure, free, minimal
-setup, excellent mobile app. The phone number requirement is the only friction, and for a
-5–10 person team it's not a blocker.
+Signal will be the new primary channel. It cannot serve as its own backup.
+Signal's reliability as a primary is acceptable for a small team: occasional outages,
+mostly <1 hr, a few times per year. Backup needs to cover those gaps.
 
 ---
 
 ## Recommendation
 
-**Use Signal.**
+**Use Matrix (self-hosted) as the permanent backup.**
 
-Signal is the right choice for a small team's backup communication channel. Its infrastructure
-is entirely independent of your team's stack (and of any commercial SaaS your team might use),
-so it stays up when your primary tool goes down. Setup takes under ten minutes: create a Signal
-group and add every team member. The mobile app is the most polished of the four, and the
-desktop client now works properly without a phone present. It's free, end-to-end encrypted
-by default, and run by a nonprofit — no licensing, no seat costs, no ToS concerns for a 5-person group.
+Once Teams is decommissioned, the backup for Signal must be independent of both M365 and
+Signal Foundation infrastructure. A self-hosted Matrix homeserver on a cheap VPS is the
+only option here that satisfies that requirement without ceding data control to a third party.
+It also aligns with the direction already set by choosing Signal — the team is moving
+toward open, independent infrastructure. The admin overhead (~1–2 hours to set up, minimal
+ongoing maintenance) is a one-time cost for a long-lived backup that you fully control.
 
-Matrix is the only alternative worth considering if data sovereignty is a hard requirement
-(e.g., sensitive comms that can't touch a US commercial server), but it brings real admin
-overhead that isn't justified for a backup channel unless you already run the homeserver.
+**For the transition period (while Teams is still running):** Teams already serves as a
+natural backup for early Signal outages. No setup required — use it.
 
-**Prerequisites:**
-- Every team member creates a Signal account (requires a mobile phone number).
-- One person creates a Signal group and adds all members.
-- Test the group once with a drill message — confirm everyone receives it before you need it.
+**If Matrix setup is not feasible in the short term:** Discord is the pragmatic fallback —
+free, zero setup, independent infrastructure. Accept the reliability trade-off and revisit
+once there's bandwidth to stand up the Matrix homeserver.
+
+**Prerequisites for Matrix:**
+- A VPS (any provider; ~$5–6/mo for a 1 vCPU/1 GB instance is sufficient).
+- A domain name (~$12/yr).
+- ~1–2 hours of admin time to deploy Synapse via Docker Compose and configure DNS.
+- All team members create an Element X account on the homeserver (5 min each).
+- Run a test drill before Teams is decommissioned.
 
 ---
 
-*Research date: 2026-06-23. Sources cited inline.*
+*Research date: 2026-06-23 (rev. 2). Sources cited inline.*

@@ -24,7 +24,7 @@ Create task dirs with `make new-task name=short-name`.
 - **Goal:** Compare Matrix, Discord, Slack, Signal as backup comms channel for a small team (scds-infra #26).
 - **Status:** done
 - **External repos:** none
-- **Notes:** Research/writing task. Deliverable is notes.md. Recommendation: Signal (independent infra, free, zero admin overhead).
+- **Notes:** Research/writing task. Deliverable is notes.md. Rev 1 rec: Signal as primary. Rev 2 (Teams→Signal migration context): Matrix self-hosted as permanent backup; Teams as transitional backup during migration.
 
 ### 2026-06-23 — wireguard-boxman-demo
 
