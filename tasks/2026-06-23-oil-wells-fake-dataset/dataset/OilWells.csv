@@ -1,0 +1,76 @@
+well_id,well_name,field_name,status,oil_type,depth_m,discovery_year,operator,lon,lat
+IQ-OW-001,H-001,Halfaya,planned,light crude,2314,2011,Iraq Drilling Company,45.308811,33.714503
+IQ-OW-002,H-002,Halfaya,active,sour crude,4769,1995,Midland Oil Company,45.897789,32.447780
+IQ-OW-003,Q-003,Qayyarah,active,condensate,4056,1960,Basra Oil Company,42.375833,35.773699
+IQ-OW-004,G-004,Gharraf,active,heavy crude,1563,1995,North Oil Company,43.290404,30.943349
+IQ-OW-005,N-005,Nassiriya,active,condensate,1832,1988,Missan Oil Company,43.473071,33.386922
+IQ-OW-006,Z-006,Zubair,active,light crude,3402,1939,Demo Petroleum Co,42.335373,32.866483
+IQ-OW-007,N-007,Najmah,active,sour crude,3370,1948,Basra Oil Company,42.809007,29.129326
+IQ-OW-008,N-008,Nassiriya,active,sour crude,2632,2014,Iraq Drilling Company,44.661911,35.929418
+IQ-OW-009,K-009,Kirkuk,active,condensate,1299,2008,Basra Oil Company,47.715189,34.006089
+IQ-OW-010,Z-010,Zubair,active,condensate,3698,1927,Basra Oil Company,45.115955,36.823822
+IQ-OW-011,K-011,Kirkuk,active,sour crude,1821,2007,Missan Oil Company,40.926969,32.103857
+IQ-OW-012,K-012,Kirkuk,active,light crude,2184,1937,Midland Oil Company,43.091403,37.356215
+IQ-OW-013,EB-013,East Baghdad,planned,condensate,1777,1984,Demo Petroleum Co,42.822830,33.137207
+IQ-OW-014,H-014,Halfaya,active,light crude,4601,1985,Demo Petroleum Co,44.073106,35.888738
+IQ-OW-015,G-015,Gharraf,active,sour crude,3983,2001,North Oil Company,42.024159,32.590229
+IQ-OW-016,M-016,Mansuriyah,active,sour crude,4928,1967,Iraq Drilling Company,42.990496,30.009483
+IQ-OW-017,M-017,Mansuriyah,planned,condensate,4335,2017,Missan Oil Company,43.213639,30.272857
+IQ-OW-018,BH-018,Bai Hassan,active,light crude,1773,1929,Iraq Drilling Company,44.834240,30.108386
+IQ-OW-019,R-019,Rumaila,inactive,medium crude,2301,1958,Missan Oil Company,44.283570,30.860182
+IQ-OW-020,K-020,Kirkuk,active,condensate,1851,2005,Demo Petroleum Co,42.614328,33.232395
+IQ-OW-021,Z-021,Zubair,inactive,heavy crude,3139,1978,Iraq Drilling Company,47.662470,34.051271
+IQ-OW-022,WQ-022,West Qurna,active,heavy crude,2336,2018,Midland Oil Company,45.298589,33.647971
+IQ-OW-023,H-023,Halfaya,inactive,medium crude,5114,1938,North Oil Company,41.577786,35.354121
+IQ-OW-024,M-024,Majnoon,active,condensate,3573,2014,Basra Oil Company,42.728972,32.689819
+IQ-OW-025,K-025,Kirkuk,active,medium crude,3525,1970,North Oil Company,43.128192,36.702039
+IQ-OW-026,N-026,Nassiriya,inactive,sour crude,1389,2009,Missan Oil Company,39.399470,34.128025
+IQ-OW-027,M-027,Majnoon,planned,heavy crude,2604,1930,Demo Petroleum Co,44.553741,31.225061
+IQ-OW-028,M-028,Mansuriyah,active,sour crude,2002,2018,Missan Oil Company,40.055638,35.879300
+IQ-OW-029,BH-029,Bai Hassan,active,medium crude,1735,1950,Midland Oil Company,41.960113,35.844175
+IQ-OW-030,EB-030,East Baghdad,planned,sour crude,1461,1952,North Oil Company,40.456649,30.091194
+IQ-OW-031,N-031,Nassiriya,inactive,medium crude,2477,1962,Demo Petroleum Co,47.966676,29.682551
+IQ-OW-032,AA-032,Al-Ahdab,active,medium crude,1497,1947,Basra Oil Company,41.924556,36.431799
+IQ-OW-033,Q-033,Qayyarah,active,light crude,3987,2011,Iraq Drilling Company,45.537356,33.224583
+IQ-OW-034,K-034,Kirkuk,active,light crude,3991,1977,Midland Oil Company,44.896759,36.586470
+IQ-OW-035,WQ-035,West Qurna,active,light crude,3601,1935,Demo Petroleum Co,47.368081,29.543965
+IQ-OW-036,Z-036,Zubair,active,sour crude,4166,1971,Missan Oil Company,42.745934,36.595710
+IQ-OW-037,K-037,Kirkuk,planned,heavy crude,4540,1940,Missan Oil Company,45.237262,33.275040
+IQ-OW-038,WQ-038,West Qurna,planned,heavy crude,2410,1983,Basra Oil Company,41.398494,32.502145
+IQ-OW-039,M-039,Majnoon,active,light crude,2040,1983,Iraq Drilling Company,40.807273,36.789463
+IQ-OW-040,A-040,Akkas,active,medium crude,2153,1964,Iraq Drilling Company,44.672241,30.594691
+IQ-OW-041,A-041,Akkas,planned,medium crude,1272,1935,North Oil Company,39.706249,33.748057
+IQ-OW-042,Q-042,Qayyarah,planned,condensate,1464,1963,Iraq Drilling Company,42.736861,29.499040
+IQ-OW-043,BH-043,Bai Hassan,active,heavy crude,2690,2016,Iraq Drilling Company,48.266421,34.287695
+IQ-OW-044,Z-044,Zubair,active,sour crude,1448,1965,Midland Oil Company,41.468389,30.565636
+IQ-OW-045,R-045,Rumaila,active,condensate,5136,2002,Basra Oil Company,46.651362,31.804619
+IQ-OW-046,Q-046,Qayyarah,active,sour crude,2911,2010,North Oil Company,47.592476,31.308306
+IQ-OW-047,R-047,Rumaila,inactive,sour crude,4395,1990,Basra Oil Company,46.337197,30.822621
+IQ-OW-048,H-048,Halfaya,inactive,medium crude,3847,1931,Missan Oil Company,43.068089,30.160090
+IQ-OW-049,R-049,Rumaila,active,medium crude,3367,1988,Demo Petroleum Co,41.402219,33.563681
+IQ-OW-050,R-050,Rumaila,active,sour crude,4394,2014,Basra Oil Company,44.241917,31.738708
+IQ-OW-051,M-051,Majnoon,active,condensate,3306,2016,Demo Petroleum Co,39.601252,35.526434
+IQ-OW-052,AA-052,Al-Ahdab,active,condensate,1841,1999,Basra Oil Company,42.627905,35.513519
+IQ-OW-053,G-053,Gharraf,planned,light crude,4656,1959,Iraq Drilling Company,43.348712,31.749229
+IQ-OW-054,A-054,Akkas,active,medium crude,3244,1961,North Oil Company,48.374308,34.606722
+IQ-OW-055,M-055,Majnoon,active,sour crude,4087,2015,Demo Petroleum Co,40.332018,35.109974
+IQ-OW-056,A-056,Akkas,inactive,sour crude,2323,1995,Iraq Drilling Company,46.147537,37.177251
+IQ-OW-057,BH-057,Bai Hassan,active,light crude,1301,1964,Iraq Drilling Company,39.857082,30.948541
+IQ-OW-058,M-058,Mansuriyah,active,sour crude,4666,1932,Basra Oil Company,43.932026,30.781512
+IQ-OW-059,M-059,Majnoon,active,sour crude,1362,1961,Iraq Drilling Company,47.601933,29.864769
+IQ-OW-060,N-060,Nassiriya,planned,light crude,2597,2005,Demo Petroleum Co,47.109632,34.176161
+IQ-OW-061,BH-061,Bai Hassan,planned,condensate,3690,1998,Missan Oil Company,44.261759,29.376875
+IQ-OW-062,B-062,Badra,active,condensate,1668,1947,Midland Oil Company,44.595094,34.654297
+IQ-OW-063,Q-063,Qayyarah,active,medium crude,1209,1935,Midland Oil Company,43.142190,36.377531
+IQ-OW-064,N-064,Najmah,active,light crude,1640,1931,North Oil Company,47.180622,35.733857
+IQ-OW-065,N-065,Najmah,active,sour crude,1913,1979,Iraq Drilling Company,41.664340,32.848830
+IQ-OW-066,AA-066,Al-Ahdab,active,medium crude,1291,1974,Basra Oil Company,39.275536,33.285556
+IQ-OW-067,M-067,Mansuriyah,active,condensate,3821,2000,Demo Petroleum Co,43.779288,33.692057
+IQ-OW-068,Q-068,Qayyarah,active,light crude,3955,2001,Missan Oil Company,47.289098,31.901619
+IQ-OW-069,H-069,Halfaya,active,medium crude,3302,2000,Midland Oil Company,40.983241,37.349430
+IQ-OW-070,BH-070,Bai Hassan,active,medium crude,1876,1995,Basra Oil Company,46.326573,33.500750
+IQ-OW-071,AA-071,Al-Ahdab,planned,light crude,3869,1960,Iraq Drilling Company,39.763998,31.520620
+IQ-OW-072,EB-072,East Baghdad,active,sour crude,4415,1934,North Oil Company,43.843344,32.467120
+IQ-OW-073,BH-073,Bai Hassan,active,sour crude,4104,1940,Missan Oil Company,40.021810,31.113553
+IQ-OW-074,WQ-074,West Qurna,active,light crude,2898,1986,Demo Petroleum Co,45.344954,35.249591
+IQ-OW-075,N-075,Nassiriya,active,heavy crude,4617,1939,Iraq Drilling Company,40.987140,35.009239
