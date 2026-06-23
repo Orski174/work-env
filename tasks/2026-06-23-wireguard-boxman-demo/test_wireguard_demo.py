@@ -28,6 +28,8 @@ import tempfile
 import time
 from pathlib import Path
 
+import shlex
+
 import invoke
 import pytest
 
@@ -69,7 +71,7 @@ if _SKIP_REASON:
 
 def _ssh(host: str, cmd: str, warn: bool = False) -> invoke.runners.Result:
     result = invoke.run(
-        f"ssh -F {SSH_CFG} -o BatchMode=yes -o ConnectTimeout=10 {host} {cmd!r}",
+        f"ssh -F {SSH_CFG} -o BatchMode=yes -o ConnectTimeout=10 {host} {shlex.quote(cmd)}",
         hide=True, warn=warn, in_stream=False,
     )
     assert result is not None  # invoke.run only returns None with disown=True
@@ -122,16 +124,16 @@ def _ansible_playbook(
     inventory: Path,
     extra_vars: dict | None = None,
 ) -> None:
+    vars_blob: dict = {"ansible_user": "admin"}
+    if extra_vars:
+        vars_blob.update(extra_vars)
     cmd = [
         "ansible-playbook",
         str(playbook),
         "-i", str(inventory),
         f"--ssh-common-args=-F {SSH_CFG}",
-        "-e", "ansible_user=admin",
+        "-e", json.dumps(vars_blob),
     ]
-    if extra_vars:
-        for k, v in extra_vars.items():
-            cmd += ["-e", f"{k}={json.dumps(v) if isinstance(v, (list, dict)) else v}"]
     subprocess.run(cmd, check=True, cwd=str(HPCCLUSTER))
 
 
@@ -175,47 +177,43 @@ def wg_box():
 
     Yields a dict with runtime info (server_nat_ip, mgmt_nic) for use in tests.
     """
-    # 1. Bring up the box (create-templates if needed, then provision)
-    subprocess.run(
-        ["boxman", "--conf", str(CONF), "up", "--force"],
-        check=True,
-    )
-
-    # 2. Wait for both VMs to accept SSH
-    _wait_ssh(SERVER_HOST)
-    _wait_ssh(CLIENT_HOST)
-
-    # 3. wg_server's nat1 IP — used as wireguard_server_remote_host
-    #    (wg_client is on the same nat1 bridge, so nat1 IP is reachable)
-    server_nat_ip = _ssh_ip_from_config(SERVER_HOST)
-
-    # 4. Detect and statically configure the mgmt NIC on wg_server.
-    #    The mgmt network has no DHCP, so eth1/ens*/enp* has no IP after clone.
-    mgmt_nic = _detect_mgmt_nic(SERVER_HOST)
-    _ssh(SERVER_HOST, f"sudo ip addr add {SERVER_MGMT_IP}/24 dev {mgmt_nic}", warn=True)
-    _ssh(SERVER_HOST, f"sudo ip link set {mgmt_nic} up")
-
-    # 5. Write the Ansible group inventory (02-groups.yml) in the boxman workspace
-    inv_dir = WS / "inventory"
-    inv_dir.mkdir(parents=True, exist_ok=True)
-    _write_group_inventory(inv_dir / "02-groups.yml", server_nat_ip, mgmt_nic)
-
     try:
+        # 1. Bring up the box (create-templates if needed, then provision)
+        subprocess.run(
+            ["boxman", "--conf", str(CONF), "up", "--force"],
+            check=True,
+        )
+
+        # 2. Wait for both VMs to accept SSH
+        _wait_ssh(SERVER_HOST)
+        _wait_ssh(CLIENT_HOST)
+
+        # 3. wg_server's nat1 IP — used as wireguard_server_remote_host
+        #    (wg_client is on the same nat1 bridge, so nat1 IP is reachable)
+        server_nat_ip = _ssh_ip_from_config(SERVER_HOST)
+
+        # 4. Detect and statically configure the mgmt NIC on wg_server.
+        #    The mgmt network has no DHCP, so eth1/ens*/enp* has no IP after clone.
+        mgmt_nic = _detect_mgmt_nic(SERVER_HOST)
+        _ssh(SERVER_HOST, f"sudo ip addr add {SERVER_MGMT_IP}/24 dev {mgmt_nic}", warn=True)
+        _ssh(SERVER_HOST, f"sudo ip link set {mgmt_nic} up")
+
+        # 5. Write the Ansible group inventory (02-groups.yml) in the boxman workspace
+        inv_dir = WS / "inventory"
+        inv_dir.mkdir(parents=True, exist_ok=True)
+        _write_group_inventory(inv_dir / "02-groups.yml", server_nat_ip, mgmt_nic)
+
         # 6. Deploy wireguard_server role
         _ansible_playbook(
             HPCCLUSTER / "ansible" / "playbooks" / "wireguard_server.yml",
             inv_dir,
         )
 
-        # 7. Fetch the server-generated client config to the controller
-        with tempfile.NamedTemporaryFile(suffix=".conf", delete=False) as tf:
+        # 7. Fetch the server-generated client config to the controller.
+        #    File is root-owned (600); use sudo cat over SSH instead of scp.
+        with tempfile.NamedTemporaryFile(suffix=".conf", delete=False, mode="w") as tf:
             client_conf_local = tf.name
-        subprocess.run(
-            ["scp", "-F", str(SSH_CFG),
-             f"{SERVER_HOST}:/root/boxman_client.conf",
-             client_conf_local],
-            check=True,
-        )
+            tf.write(_ssh(SERVER_HOST, "sudo cat /root/boxman_client.conf").stdout)
 
         # 8. Deploy wireguard_client role
         _ansible_playbook(
