@@ -18,6 +18,14 @@ Create task dirs with `make new-task name=short-name`.
 
 <!-- Add entries below -->
 
+### 2026-06-23 — backup-comm-channel
+
+- **Dir:** tasks/2026-06-23-backup-comm-channel/
+- **Goal:** Compare Matrix, Discord, Slack, Signal as backup comms channel for a small team (scds-infra #26).
+- **Status:** done
+- **External repos:** none
+- **Notes:** Research/writing task. Deliverable is notes.md. Recommendation: Signal (independent infra, free, zero admin overhead).
+
 ### 2026-06-23 — wireguard-boxman-demo
 
 - **Dir:** tasks/2026-06-23-wireguard-boxman-demo/
