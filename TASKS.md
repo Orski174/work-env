@@ -18,6 +18,22 @@ Create task dirs with `make new-task name=short-name`.
 
 <!-- Add entries below -->
 
+### 2026-06-23 — wireguard-boxman-demo
+
+- **Dir:** tasks/2026-06-23-wireguard-boxman-demo/
+- **Goal:** Boxman conf.yml + pytest integration test for wireguard_server + wireguard_client roles in a local libvirt environment (split-tunnel, iptables, dnsmasq). Tracks scds-infra #119.
+- **Status:** todo
+- **External repos:** $REPOS_ROOT/boxman-orig (CLI), $REPOS_ROOT/hpccluster (roles, playbooks, smoke tests)
+- **Notes:** conf.yml and test live in this task dir (not in boxman-orig). Ref branch orski/73-wireguard-clouddev01 for role var choices (iptables backend, eth1 egress, 10.1.30.0/24 split-tunnel). Server writes /root/boxman_client.conf; client reads it via wireguard_client_connections[0].config_src.
+
+### 2026-06-23 — oil-wells-fake-dataset
+
+- **Dir:** tasks/2026-06-23-oil-wells-fake-dataset/
+- **Goal:** Synthetic Iraq oil-well CSV + point shapefile (75 wells, seed 20260610, WGS84) for GeoServer demo.
+- **Status:** done
+- **External repos:** copied from $REPOS_ROOT/cams_geospatial_platform (branch orski/oil-wells-demo-dataset)
+- **Notes:** Reference dataset committed under dataset/; run.sh regenerates into output/. Generator is pure stdlib — no pip deps.
+
 ### 2026-06-15 — terraform-workspaces-eval
 
 - **Dir:** tasks/2026-06-15-terraform-workspaces-eval/
