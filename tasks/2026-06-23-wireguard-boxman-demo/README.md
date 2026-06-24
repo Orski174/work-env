@@ -25,11 +25,16 @@ tasks/2026-06-23-wireguard-boxman-demo/
 
 ---
 
+## Where this runs
+
+Authored on the workstation, **executed on `sc1` (scds001)** — a RHEL 9.7 box with
+KVM + libvirt. Workflow: edit here → `git push` → `git pull` on sc1 → run pytest there.
+
 ## External repos
 
-| Repo | Path | What lives there |
-|------|------|-----------------|
-| boxman-orig | `~/git/boxman-orig` | boxman CLI + Python package |
+| Repo | Path on sc1 | What lives there |
+|------|------------|-----------------|
+| boxman | `~/git/boxman` (conda env `boxman`) | boxman CLI — `~/.conda/envs/boxman/bin/boxman` |
 | hpccluster  | `~/git/hpccluster`  | roles at `ansible/roles/wireguard_{server,client}/`, playbooks at `ansible/playbooks/wireguard_{server,client}.yml`, smoke tests at `tests/wireguard_{server,client}_smoke.yml` |
 
 ---
@@ -130,15 +135,42 @@ and driven from `run.sh`.
 
 ---
 
-## How to run
+## How to run (on sc1)
+
+### One-time setup
 
 ```bash
+# Ensure hpccluster is checked out
+ls ~/git/hpccluster
+
+# Install test dependencies into the boxman conda env
+conda activate boxman
+pip install pytest invoke ansible ansible-core
+```
+
+### Run the test
+
+```bash
+# On workstation: push latest changes
+git push
+
+# On sc1:
+cd ~/git/work-env && git pull
 cd tasks/2026-06-23-wireguard-boxman-demo
-bash run.sh          # runs the pytest integration test
+
+# Activate the conda env so ansible/pytest/invoke are in PATH
+conda activate boxman
+
+bash run.sh
 # or directly:
 pytest -m integration test_wireguard_demo.py -v
 ```
 
-Requires: libvirtd running locally, `boxman` CLI in PATH (from `~/git/boxman-orig`
-venv or editable install), `~/git/hpccluster` present, `BOXMAN_ADMIN_PASS` optionally
-set (defaults to `boxman`).
+`run.sh` automatically prepends `~/.conda/envs/boxman/bin` to PATH so `boxman` is
+found by the test's subprocess calls even without manually activating the env.
+
+### Optional
+
+```bash
+BOXMAN_ADMIN_PASS=mypass bash run.sh   # override the default VM admin password
+```
