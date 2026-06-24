@@ -229,10 +229,11 @@ def wg_box():
         yield {"server_nat_ip": server_nat_ip, "mgmt_nic": mgmt_nic}
 
     finally:
-        subprocess.run(
-            ["boxman", "--conf", str(CONF), "deprovision"],
-            input="yes\n", text=True, timeout=300,
-        )
+        if not os.environ.get("KEEP_BOXES"):
+            subprocess.run(
+                ["boxman", "--conf", str(CONF), "deprovision"],
+                input="yes\n", text=True, timeout=300,
+            )
 
 
 # ---------------------------------------------------------------------------
