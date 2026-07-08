@@ -18,6 +18,14 @@ Create task dirs with `make new-task name=short-name`.
 
 <!-- Add entries below -->
 
+### 2026-07-08 — signal-server-viability
+
+- **Dir:** tasks/2026-07-08-signal-server-viability/
+- **Goal:** Determine whether `signalapp/Signal-Server` can be self-hosted as a genuine standalone server real Signal clients can use. Tracks scds-infra #148.
+- **Status:** done
+- **External repos:** none
+- **Notes:** Research/writing task, no deployment. Conclusion: not practically viable — FoundationDB + private `spam-filter` submodule are build blockers, Contact Discovery Service's SGX-enclave/x86-only native build is a hard wall every hands-on attempt hits, and the furthest-reaching community guide only works by stripping `zkgroup` and requiring a forked non-official client. #26's self-hosted-Matrix decision remains the actual independent backup; #148 resolves as a documented finding, not an infra change.
+
 ### 2026-06-23 — backup-comm-channel
 
 - **Dir:** tasks/2026-06-23-backup-comm-channel/
