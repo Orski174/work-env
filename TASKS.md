@@ -18,6 +18,30 @@ Create task dirs with `make new-task name=short-name`.
 
 <!-- Add entries below -->
 
+### 2026-08-07 — pg-ha-boxman-trial
+
+- **Dir:** tasks/2026-08-07-pg-ha-boxman-trial/
+- **Goal:** Evaluate HA Postgres via Patroni on 3 boxman VMs (pg1/pg2/pg3), using CNPG's own Postgres image as the container base under Docker — non-k8s fallback since CNPG itself is a k8s operator. Tracks scds-infra #91, sprint-011.
+- **Status:** in-progress
+- **External repos:** boxman (`~/git/boxman` on sc1)
+- **Notes:** Plan reviewed/greenlit by command-center via agent-mailbox. Runs on sc1 like wireguard-boxman-demo/saltstack-lab. This session does not touch the scds-infra GitLab issue directly — findings reported back via agent-mailbox.
+
+### 2026-07-20 — demo-173-opencode-proxy
+
+- **Dir:** tasks/2026-07-20-demo-173-opencode-proxy/
+- **Goal:** Demo/KT prep for OpenCode Go models in Claude Code's `/model` picker. Tracks scds-infra #173.
+- **Status:** done
+- **External repos:** `~/projects/claudeStuff/gateways/opencode-go`
+- **Notes:** KT/demo content only (`demo-script.md`), nothing to execute. Corrected the source script during prep: LiteLLM bridge is obsolete (proxy.py now does OpenAI-compat translation in-process), `opencode-litellm.service` is a dead unit, not a gap to fix — follow-up candidate is disabling/removing it. Model count corrected to 22 (was 14 in ticket).
+
+### 2026-07-20 — demo-172-sc1-talos
+
+- **Dir:** tasks/2026-07-20-demo-172-sc1-talos/
+- **Goal:** Demo/KT prep for the sc1 6-node HA Talos k8s cluster. Tracks scds-infra #172.
+- **Status:** done
+- **External repos:** `~/git/hpc-k8s-infra`
+- **Notes:** KT/demo content only (`demo-script.md`), nothing to execute. Found during prep: `kustomization/infrastructure` on sc1 is failing (Rook-Ceph CRDs missing after commit `16035f3` added a `CephBlockPool` manifest) — flagged in the script per user's call, not fixed. Node health unaffected.
+
 ### 2026-07-08 — signal-server-viability
 
 - **Dir:** tasks/2026-07-08-signal-server-viability/

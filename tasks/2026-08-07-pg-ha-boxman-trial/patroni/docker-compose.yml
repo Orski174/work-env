@@ -1,0 +1,39 @@
+# Identical file pushed to all 3 VMs (pg1/pg2/pg3); per-VM identity comes from
+# ./.env (NODE_NAME, NODE_IP), rendered by ../setup.sh before push.
+#
+# network_mode: host on both services — simplest for a 3-VM trial. Postgres
+# 5432, Patroni REST 8008, etcd 2379/2380 are then directly reachable on each
+# VM's nat1 IP with no port-mapping bookkeeping, and etcd/Patroni peer discovery
+# across VMs needs no NAT hairpin config. The VM itself is the isolation
+# boundary, so a per-VM bridge network would add plumbing for no benefit.
+services:
+  etcd:
+    image: quay.io/coreos/etcd:v3.5.17
+    network_mode: host
+    environment:
+      - ETCD_NAME=${NODE_NAME}
+      - ETCD_INITIAL_CLUSTER=etcd-pg1=http://${PG1_IP}:2380,etcd-pg2=http://${PG2_IP}:2380,etcd-pg3=http://${PG3_IP}:2380
+      - ETCD_INITIAL_CLUSTER_STATE=new
+      - ETCD_INITIAL_ADVERTISE_PEER_URLS=http://${NODE_IP}:2380
+      - ETCD_LISTEN_PEER_URLS=http://0.0.0.0:2380
+      - ETCD_LISTEN_CLIENT_URLS=http://0.0.0.0:2379
+      - ETCD_ADVERTISE_CLIENT_URLS=http://${NODE_IP}:2379
+    volumes:
+      - etcd_data:/etcd-data
+    command: >
+      etcd
+      --name=etcd-${NODE_NAME}
+      --data-dir=/etcd-data
+  patroni:
+    build: .
+    network_mode: host
+    depends_on: [etcd]
+    environment:
+      - PATRONI_NAME=${NODE_NAME}
+      - PATRONI_SCOPE=pg-ha-trial
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./patroni.yml:/etc/patroni.yml:ro
+volumes:
+  etcd_data:
+  pgdata:
