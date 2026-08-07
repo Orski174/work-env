@@ -160,8 +160,15 @@ do_backup_test() {
     'sudo docker compose -f ~/patroni/docker-compose.yml exec -T patroni pg_dump -U postgres testdb > /tmp/backup.sql'
   ssh_to "$cfg" "${ALIAS[$leader]}" \
     'sudo docker compose -f ~/patroni/docker-compose.yml exec -T patroni psql -U postgres -c "DROP DATABASE IF EXISTS restoretest;" -c "CREATE DATABASE restoretest;"'
+  # NOTE: redirect at this level (VM host shell, same as the pg_dump `>`
+  # above), not nested inside a container-side `sh -c "... < file"` — the
+  # dump landed on the VM host's /tmp, not inside the container's own
+  # filesystem, so a nested redirect would look in the wrong place. Letting
+  # `<` apply to the `docker compose exec -T` invocation itself means the
+  # VM host redirects the file as stdin, and -T forwards that stdin straight
+  # into the container's psql process.
   ssh_to "$cfg" "${ALIAS[$leader]}" \
-    'sudo docker compose -f ~/patroni/docker-compose.yml exec -T patroni sh -c "psql -U postgres restoretest < /tmp/backup.sql"'
+    'sudo docker compose -f ~/patroni/docker-compose.yml exec -T patroni psql -U postgres restoretest < /tmp/backup.sql'
   t1="$(date +%s)"
 
   echo ">> verifying row counts match"
