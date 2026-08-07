@@ -63,16 +63,69 @@ cd ~/git/work-env/tasks/2026-08-07-pg-ha-boxman-trial
 
 ## Findings summary
 
-See `notes.md` for the full log. Headline numbers:
+See `notes.md` for the full log (including the six real bugs hit and fixed
+while getting the first live cluster to bootstrap — ssh_config parsing,
+bullseye-vs-bookworm pip flags, the missing `docker compose` plugin, an etcd
+env/CLI-flag conflict, a full root-vs-postgres privilege-drop chain, and a
+stale-image-tag bug that made fixes silently not take effect on one node).
+Headline numbers, against a live 3-node cluster (pg1/pg2/pg3, 1 Leader + 2
+streaming Replicas, zero lag):
 
-- Switchover (graceful) time: _pending_
-- Kill-leader (hard failure) time: _pending_
-- Backup/restore round-trip: _pending_
+- **Switchover (graceful)**: 6s, clean rejoin, zero lag after.
+- **Kill-leader (hard-failure simulation)**: 6s, clean rejoin, zero lag after.
+  Caveat: `docker compose stop` sends SIGTERM, which Patroni catches and
+  releases its lock on immediately — this measures the *graceful-stop* path,
+  not a true crash. A real hard failure (power loss, `kill -9`, network
+  partition) is only detected once the leader's lock **expires** in etcd,
+  bounded by the configured `ttl: 30`, so worst-case real-world failover is
+  closer to ~30s, not the 6s observed here.
+- **Backup/restore**: `pg_dump` → restore-into-fresh-database round-trip
+  clean in 3s, row counts match exactly. `pg_basebackup` (physical backup,
+  also a replication-auth sanity check) completed a full 39MB base backup
+  successfully. **Gaps, not evaluated**: restoring into a brand-new
+  Patroni-bootstrapped node (only restore-into-existing-node was tested), and
+  continuous WAL-archiving / point-in-time recovery (Barman, pgBackRest) —
+  a real adoption needs that layer before this replaces anything
+  backup-critical.
+- **sc1 resource impact**: `available` memory dropped from ~16Gi to ~9.2Gi
+  for this one 3-VM cluster (swap was already maxed before and after — no
+  new distress, but no slack either).
 
 ## Recommendation
 
-_Pending trial execution — filled in after `failover-test` and `backup-test`
-have run against a live 3-node cluster._
+**Adopt selectively — as one shared HA Postgres cluster, not one per
+service.**
+
+The HA mechanics work and are a real improvement: 6s observed failover in
+both tested modes, ~30s worst-case bound for genuine crashes, against
+today's baseline of **zero automatic failover at all** — any standalone
+container's primary failure today is full downtime until someone notices and
+intervenes by hand. That gap alone justifies adoption somewhere.
+
+But the overhead is real and mostly **fixed per cluster, not per database**:
+3 VMs, an etcd quorum, a custom Docker image (CNPG's Postgres + Patroni
+pip-installed) that needs rebuilding on every CNPG/Postgres version bump, a
+new config surface (`patroni.yml` + `pg_hba`), and a new
+monitoring/operations surface (`patronictl`, Patroni's REST API, etcd
+health). Getting a *first* working cluster up surfaced six distinct bugs
+(see `notes.md`) — none exotic once known, and now fully scripted and
+reproducible, but real one-time tooling investment, not a 10-minute drop-in.
+
+Because that cost is fixed regardless of how many databases the cluster
+serves, replicating this **3-VM-per-service** pattern separately for
+matrix_synapse, vaultwarden, and GitLab would 3x the VM/etcd footprint for no
+proportional benefit — and sc1 is already memory-constrained (swap maxed
+before this trial even started; `available` memory dropped by ~7Gi from just
+this one cluster). A **single shared** 3-node Patroni/etcd cluster hosting a
+separate database per service amortizes that fixed cost across all of them
+instead.
+
+**Concrete next step, if this moves forward:** stand up one shared cluster
+(this task's `boxman/conf.yml` + `setup.sh` are a working starting point),
+add WAL-archiving backup (Barman or pgBackRest) before anything
+production-critical goes on it, and pilot with the least risky/most
+write-light of the three services first — don't migrate all three at once,
+and don't build a cluster per service.
 
 ## Inputs
 

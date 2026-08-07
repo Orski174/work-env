@@ -165,8 +165,8 @@ improvement over that baseline.
 - [x] `./run.sh failover-test --kill-leader` — 6s (SIGTERM-driven, see caveat
       above), clean rejoin.
 - [x] `./run.sh backup-test` — see below.
-- [ ] Post-run `free -h` on sc1 — confirm no new memory distress.
-- [ ] Final recommendation, written into `README.md`.
+- [x] Post-run `free -h` on sc1 — see below.
+- [x] Final recommendation, written into `README.md`.
 
 **`./run.sh backup-test` result:** one real bug hit and fixed (`< /tmp/backup.sql`
 was nested inside a container-side `sh -c`, looking for the dump file in the
@@ -204,3 +204,27 @@ line is cosmetically broken. Not worth chasing further for a trial.
 - No continuous WAL-archiving / point-in-time-recovery solution (Barman,
   pgBackRest) was evaluated. A production adoption would need one; this
   trial only proves the underlying logical/physical backup primitives work.
+
+## 2026-08-07 — post-run resource check, recommendation
+
+**Post-run `free -h` on sc1:**
+```
+               total        used        free      shared  buff/cache   available
+Mem:           124Gi       115Gi       1.1Gi       1.4Gi        10Gi       9.2Gi
+Swap:          4.0Gi       4.0Gi       0.0Ki
+```
+`available` dropped from ~16Gi (pre-flight) to ~9.2Gi — this one 3-VM cluster
+consumed roughly 7Gi once Docker/Postgres/etcd overhead is included on top of
+the 3×2048MB VM allocations. Swap usage unchanged (still fully used, not
+growing) — no new distress signal, but confirms the fixed-per-cluster cost
+observation in the recommendation: this isn't a cost that scales down if
+replicated per-service.
+
+**Recommendation written to `README.md`: adopt selectively, as one shared
+cluster, not one per service.** See README for full reasoning — summary: the
+HA mechanics genuinely work (6s observed failover, ~30s worst-case bound,
+vs. today's zero-HA baseline), but the overhead (VMs, etcd, custom image,
+new config/ops surface) is largely fixed per cluster rather than per
+database, so a shared cluster amortizes it while a cluster-per-service
+pattern would 3x the footprint on an already memory-constrained host for no
+proportional benefit.
