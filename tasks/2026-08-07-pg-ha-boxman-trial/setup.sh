@@ -67,10 +67,17 @@ for n in "${NODES[@]}"; do
   tar -C "$HERE/patroni" --exclude=rendered -cf - . | ssh -F "$CFG" "${ALIAS[$n]}" 'tar -C ~/patroni -xf -'
 done
 
-echo "== building the derived image on pg1 to detect Postgres bin_dir =="
-ssh_to "$CFG" "${ALIAS[pg1]}" 'cd ~/patroni && sudo docker build -t pg-ha-trial-patroni .'
+echo "== building the patroni image on pg1 (via docker compose build — the same"
+echo "   tag 'docker compose up' will use later) and detecting Postgres bin_dir =="
+# IMPORTANT: build through `docker compose build`, not a separately-tagged raw
+# `docker build`. compose auto-builds its own image tag on first `up` if none
+# exists, but does NOT rebuild it on subsequent `up`s — a raw `docker build`
+# under a different tag name (as an earlier version of this script did) never
+# updates the tag compose actually uses, so a later `up` silently reuses the
+# stale first-ever build even after Dockerfile/entrypoint.sh changes.
+ssh_to "$CFG" "${ALIAS[pg1]}" 'cd ~/patroni && sudo docker compose build patroni'
 PG_BIN_DIR="$(ssh_to "$CFG" "${ALIAS[pg1]}" \
-  'sudo docker run --rm --entrypoint sh pg-ha-trial-patroni -c "dirname \$(command -v postgres)"' | tr -d '\r')"
+  'cd ~/patroni && sudo docker compose run --rm --no-deps --entrypoint sh patroni -c "dirname \$(command -v postgres)"' | tr -d '\r')"
 [ -n "$PG_BIN_DIR" ] || { echo "could not detect postgres bin_dir in the built image" >&2; exit 1; }
 echo ">> detected PG_BIN_DIR=$PG_BIN_DIR"
 
@@ -107,10 +114,9 @@ for n in "${NODES[@]}"; do
   scp -F "$CFG" "$HERE/patroni/rendered/$n.env" "${ALIAS[$n]}:~/patroni/.env"
 done
 
-echo "== building patroni image on pg2/pg3 (pg1 already built) =="
+echo "== building patroni image on pg2/pg3 (pg1 already built via compose above) =="
 for n in pg2 pg3; do
-  ssh_to "$CFG" "${ALIAS[$n]}" 'cd ~/patroni && sudo docker build -t pg-ha-trial-patroni . && sudo -E docker compose build patroni' 2>&1 || \
-    ssh_to "$CFG" "${ALIAS[$n]}" 'cd ~/patroni && sudo docker compose build patroni'
+  ssh_to "$CFG" "${ALIAS[$n]}" 'cd ~/patroni && sudo docker compose build patroni'
 done
 
 echo "== starting etcd on all 3 nodes (quorum needs 2-of-3) =="
