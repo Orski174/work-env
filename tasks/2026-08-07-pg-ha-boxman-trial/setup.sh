@@ -66,7 +66,7 @@ done
 echo "== building the derived image on pg1 to detect Postgres bin_dir =="
 ssh_to "$CFG" "${ALIAS[pg1]}" 'cd ~/patroni && sudo docker build -t pg-ha-trial-patroni .'
 PG_BIN_DIR="$(ssh_to "$CFG" "${ALIAS[pg1]}" \
-  'sudo docker run --rm pg-ha-trial-patroni sh -c "dirname \$(command -v postgres)"' | tr -d '\r')"
+  'sudo docker run --rm --entrypoint sh pg-ha-trial-patroni -c "dirname \$(command -v postgres)"' | tr -d '\r')"
 [ -n "$PG_BIN_DIR" ] || { echo "could not detect postgres bin_dir in the built image" >&2; exit 1; }
 echo ">> detected PG_BIN_DIR=$PG_BIN_DIR"
 
