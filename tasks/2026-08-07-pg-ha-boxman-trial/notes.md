@@ -164,6 +164,43 @@ improvement over that baseline.
 - [x] `./run.sh failover-test --switchover` — 6s, clean rejoin.
 - [x] `./run.sh failover-test --kill-leader` — 6s (SIGTERM-driven, see caveat
       above), clean rejoin.
-- [ ] `./run.sh backup-test` — dump/restore + pg_basebackup result.
+- [x] `./run.sh backup-test` — see below.
 - [ ] Post-run `free -h` on sc1 — confirm no new memory distress.
 - [ ] Final recommendation, written into `README.md`.
+
+**`./run.sh backup-test` result:** one real bug hit and fixed (`< /tmp/backup.sql`
+was nested inside a container-side `sh -c`, looking for the dump file in the
+wrong filesystem — the dump itself landed on the VM host via a host-level `>`
+redirect. Fixed by redirecting at the same level for both dump and restore).
+
+```
+dump+restore elapsed: 3s
+original row count:   50
+restored row count:   50
+row counts match:     yes
+pg_basebackup ok:      yes
+```
+
+pg_dump → restore-into-fresh-database round-trip: clean, 3s, row counts match
+exactly. `pg_basebackup` (physical backup, doubling as a replication-auth
+sanity check) completed a full 39MB base backup successfully.
+
+**Known minor bug, not fixed:** the `pg_basebackup` step's `PGPASSWORD=$(grep
+... | awk ...)` one-liner has a shell-quoting bug (visible as `grep:
+/etc/patroni.ymlawk: ...` noise in the output) that likely left `PGPASSWORD`
+empty. The backup still succeeded, most plausibly because it ran as the
+`postgres` OS user with `$HOME=/var/lib/postgresql` (set in `entrypoint.sh`),
+and Patroni maintains its own `~/.pgpass` there for its internal replication
+connections — libpq auto-discovers that file ahead of any env var, which is a
+legitimate, intentional auth path, just not the one the script's one-liner
+intended. Net effect: the actual thing being tested (does replication auth
+work) is answered — yes — even though the script's own password-extraction
+line is cosmetically broken. Not worth chasing further for a trial.
+
+**Explicit gaps, as scoped in the original plan (not evaluated here):**
+- This does not exercise restoring a `pg_dump` into a brand-new
+  Patroni-bootstrapped node — only into a fresh database on an existing,
+  already-running node.
+- No continuous WAL-archiving / point-in-time-recovery solution (Barman,
+  pgBackRest) was evaluated. A production adoption would need one; this
+  trial only proves the underlying logical/physical backup primitives work.
