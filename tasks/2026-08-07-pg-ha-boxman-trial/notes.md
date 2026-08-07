@@ -228,3 +228,26 @@ new config/ops surface) is largely fixed per cluster rather than per
 database, so a shared cluster amortizes it while a cluster-per-service
 pattern would 3x the footprint on an already memory-constrained host for no
 proportional benefit.
+
+## 2026-08-07 — teardown
+
+`./run.sh destroy -y`: all 3 VMs undefined and their network removed cleanly.
+One cosmetic issue, not a real problem: `virsh undefine
+--remove-all-storage --wipe-storage ...` hit a libvirt storage-pool API quirk
+(`unsupported flags (0x2) in function virStorageBackendVolDeleteLocal`) on
+all 3 disks — the *wipe* itself succeeded ("Wiping volume ... Done") but the
+follow-up unlink call failed. Didn't matter: boxman's final cleanup step
+force-removes the whole workspace directory tree at the filesystem level
+regardless of libvirt's storage-pool bookkeeping, so the qcow2 files were
+gone either way. Confirmed after: `virsh list --all` shows no pg_ha_trial
+VMs, `virsh net-list --all` shows no pg_ha_trial network, workspace dir gone.
+
+Post-teardown `free -h`: `available` back to ~15Gi (from the post-run 9.2Gi),
+consistent with the pre-flight ~16Gi baseline — the resource footprint was
+fully reclaimed, no leftover drag on sc1 from this trial.
+
+**Trial complete.** All deliverables from the ticket brief are done: trial
+deployment ✓, HA/failover evaluated ✓, backup/restore evaluated ✓,
+operational-overhead comparison ✓, recommendation ✓ (adopt selectively, as
+one shared cluster). Reported back to command-center via agent-mailbox for
+posting to scds-infra #91.

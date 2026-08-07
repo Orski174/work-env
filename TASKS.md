@@ -22,9 +22,9 @@ Create task dirs with `make new-task name=short-name`.
 
 - **Dir:** tasks/2026-08-07-pg-ha-boxman-trial/
 - **Goal:** Evaluate HA Postgres via Patroni on 3 boxman VMs (pg1/pg2/pg3), using CNPG's own Postgres image as the container base under Docker — non-k8s fallback since CNPG itself is a k8s operator. Tracks scds-infra #91, sprint-011.
-- **Status:** in-progress
+- **Status:** done
 - **External repos:** boxman (`~/git/boxman` on sc1)
-- **Notes:** Plan reviewed/greenlit by command-center via agent-mailbox. Runs on sc1 like wireguard-boxman-demo/saltstack-lab. This session does not touch the scds-infra GitLab issue directly — findings reported back via agent-mailbox.
+- **Notes:** Plan reviewed/greenlit by command-center via agent-mailbox. Ran on sc1 like wireguard-boxman-demo/saltstack-lab; six real bootstrap bugs hit and fixed (see notes.md). Result: 6s failover (both graceful switchover and simulated hard-kill), clean backup/restore. Recommendation: adopt selectively as one shared cluster, not one per service. VMs torn down after. This session did not touch the scds-infra GitLab issue directly — findings reported back via agent-mailbox for command-center to post.
 
 ### 2026-07-20 — demo-173-opencode-proxy
 
