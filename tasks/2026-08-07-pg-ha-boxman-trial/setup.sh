@@ -32,7 +32,7 @@ host_for() {  # cfg pattern -> boxman Host alias
 ip_for() {  # cfg host_alias -> Hostname value
   awk -v h="$2" '
     $1=="Host" { inblock = ($2==h) }
-    inblock && $1=="HostName" { print $2; exit }
+    inblock && tolower($1)=="hostname" { print $2; exit }
   ' "$1"
 }
 

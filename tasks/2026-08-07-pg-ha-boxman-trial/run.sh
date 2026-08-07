@@ -39,7 +39,7 @@ host_for() {
 ip_for() {
   awk -v h="$2" '
     $1=="Host" { inblock = ($2==h) }
-    inblock && $1=="HostName" { print $2; exit }
+    inblock && tolower($1)=="hostname" { print $2; exit }
   ' "$1"
 }
 
