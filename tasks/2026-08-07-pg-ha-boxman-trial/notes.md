@@ -127,13 +127,43 @@ anywhere beyond this note): replicator `c97ac73f...`, postgres `15c078f6...`
 (truncated here deliberately — full values only ever appeared in the
 now-discarded terminal output, not committed anywhere).
 
-## TODO as the trial runs
+## 2026-08-07 — failover tests
+
+**`--switchover` (graceful):** pg1 → pg2, **6s** elapsed. `patronictl
+switchover` output showed the clean sequence directly: pg1 stopped Postgres
+first, then pg2 promoted. pg1 rejoined on its own as a streaming replica
+(confirmed via `./run.sh status` immediately after) with zero lag, timeline
+bumped 1→2.
+
+**`--kill-leader` (hard-failure simulation):** pg2 → pg1, **6s** elapsed, pg2
+rejoined cleanly as a streaming replica after restart (timeline 2→3).
+
+**Caveat worth stating plainly in the recommendation:** both measured times
+are ~6s, not the ~30s `ttl` the design doc anticipated for the hard-kill path.
+That's because `docker compose stop` sends **SIGTERM**, which Patroni catches
+and uses to release its leader lock immediately and cleanly — this is a
+*graceful process stop*, not a true hard failure (VM power loss, `kill -9`,
+network partition, host crash). A real hard failure would only be detected
+after the leader's lock **expires** in etcd (bounded by the configured `ttl:
+30`), so real-world worst-case failover is closer to that ~30s figure, not
+the 6s observed here. Both numbers are worth reporting: 6s demonstrates the
+graceful-stop path is fast, but the true hard-crash worst case is still
+~30s-bounded and untested directly in this trial (would need an actual VM
+power-off or `kill -9` on the patroni process to observe).
+
+Either way — **today's per-service standalone Postgres has zero automatic
+failover at all**; any primary failure is full downtime until a human
+intervenes. Both 6s and the ~30s worst-case bound are a categorical
+improvement over that baseline.
+
+## 2026-08-07 — backup/restore test
 
 - [x] Confirm CNPG image's actual Postgres `bin_dir`.
 - [x] `./run.sh up` — VM provisioning result.
 - [x] `./run.sh setup` — cluster bootstrap result (1 Leader + 2 Replicas).
-- [ ] `./run.sh failover-test --switchover` — measured time.
-- [ ] `./run.sh failover-test --kill-leader` — measured time, rejoin outcome.
+- [x] `./run.sh failover-test --switchover` — 6s, clean rejoin.
+- [x] `./run.sh failover-test --kill-leader` — 6s (SIGTERM-driven, see caveat
+      above), clean rejoin.
 - [ ] `./run.sh backup-test` — dump/restore + pg_basebackup result.
 - [ ] Post-run `free -h` on sc1 — confirm no new memory distress.
 - [ ] Final recommendation, written into `README.md`.
