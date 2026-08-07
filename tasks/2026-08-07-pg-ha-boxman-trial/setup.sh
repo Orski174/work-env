@@ -122,7 +122,7 @@ sleep 10
 echo "== starting patroni on pg1, waiting for it to become Leader =="
 ssh_to "$CFG" "${ALIAS[pg1]}" 'cd ~/patroni && sudo docker compose up -d patroni'
 for i in $(seq 1 30); do
-  out="$(ssh_to "$CFG" "${ALIAS[pg1]}" 'sudo docker compose exec -T patroni patronictl -c /etc/patroni.yml list' 2>/dev/null || true)"
+  out="$(ssh_to "$CFG" "${ALIAS[pg1]}" 'cd ~/patroni && sudo docker compose exec -T patroni patronictl -c /etc/patroni.yml list' 2>/dev/null || true)"
   if echo "$out" | grep -q "Leader"; then
     echo ">> pg1 is Leader after ~$((i*5))s"
     break
@@ -139,7 +139,7 @@ echo "== waiting for replicas to catch up =="
 sleep 20
 
 echo "== final cluster state =="
-ssh_to "$CFG" "${ALIAS[pg1]}" 'sudo docker compose exec -T patroni patronictl -c /etc/patroni.yml list' 2>&1
+ssh_to "$CFG" "${ALIAS[pg1]}" 'cd ~/patroni && sudo docker compose exec -T patroni patronictl -c /etc/patroni.yml list' 2>&1
 
 echo
 echo "Passwords for this run (not stored anywhere else — copy into notes.md if needed):"
