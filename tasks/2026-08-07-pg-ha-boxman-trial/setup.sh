@@ -50,10 +50,14 @@ for n in "${NODES[@]}"; do
   echo ">> $n -> ${ALIAS[$n]} (${IP[$n]})"
 done
 
-echo "== ensuring docker is present on all nodes =="
+echo "== ensuring docker + docker compose (v2 plugin) are present on all nodes =="
 for n in "${NODES[@]}"; do
   ssh_to "$CFG" "${ALIAS[$n]}" \
     'command -v docker >/dev/null 2>&1 || (sudo apt-get update && sudo apt-get install -y docker.io && sudo systemctl enable --now docker)'
+  # docker.io (Ubuntu's classic docker package) doesn't ship the `docker compose`
+  # v2 plugin subcommand — docker-compose-v2 is a separate Ubuntu archive package.
+  ssh_to "$CFG" "${ALIAS[$n]}" \
+    'sudo docker compose version >/dev/null 2>&1 || (sudo apt-get update && sudo apt-get install -y docker-compose-v2)'
   ssh_to "$CFG" "${ALIAS[$n]}" 'sudo usermod -aG docker $USER || true'
 done
 
