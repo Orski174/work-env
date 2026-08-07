@@ -49,7 +49,7 @@ ssh_to() {
 }
 
 patronictl_list() {  # cfg alias -> raw patronictl list output
-  ssh_to "$1" "$2" 'sudo docker compose -f ~/patroni/docker-compose.yml exec -T patroni patronictl -c /etc/patroni.yml list' 2>/dev/null
+  ssh_to "$1" "$2" 'timeout 15 sudo docker compose -f ~/patroni/docker-compose.yml exec -T patroni patronictl -c /etc/patroni.yml list' 2>/dev/null
 }
 
 current_leader() {  # cfg alias -> member name currently Leader (empty if none)

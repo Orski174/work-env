@@ -11,7 +11,14 @@ services:
     image: quay.io/coreos/etcd:v3.5.17
     network_mode: host
     environment:
-      - ETCD_NAME=${NODE_NAME}
+      # No `command:` override here — the image's entrypoint runs bare `etcd`
+      # and reads all config from env. etcd v3.5.17 fatals if an env var and
+      # the equivalent CLI flag are both set (hit this: a `command: etcd
+      # --name=...` override alongside ETCD_NAME crashed the container with
+      # "conflicting environment variable is shadowed by corresponding
+      # command-line flag"). Env-only avoids the conflict entirely.
+      - ETCD_NAME=etcd-${NODE_NAME}
+      - ETCD_DATA_DIR=/etcd-data
       - ETCD_INITIAL_CLUSTER=etcd-pg1=http://${PG1_IP}:2380,etcd-pg2=http://${PG2_IP}:2380,etcd-pg3=http://${PG3_IP}:2380
       - ETCD_INITIAL_CLUSTER_STATE=new
       - ETCD_INITIAL_ADVERTISE_PEER_URLS=http://${NODE_IP}:2380
@@ -20,10 +27,6 @@ services:
       - ETCD_ADVERTISE_CLIENT_URLS=http://${NODE_IP}:2379
     volumes:
       - etcd_data:/etcd-data
-    command: >
-      etcd
-      --name=etcd-${NODE_NAME}
-      --data-dir=/etcd-data
   patroni:
     build: .
     network_mode: host
