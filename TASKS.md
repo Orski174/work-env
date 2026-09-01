@@ -18,6 +18,14 @@ Create task dirs with `make new-task name=short-name`.
 
 <!-- Add entries below -->
 
+### 2026-09-01 — packer-video-tutorial
+
+- **Dir:** tasks/2026-09-01-packer-video-tutorial/
+- **Goal:** Produce a recording-ready Packer tutorial script covering a Rocky 9 qcow2 build, baked packages, boxman clone/boot verification, and the three gotchas found in scds-infra #184. Tracks scds-infra #237 / Vikunja Work #410.
+- **Status:** done
+- **External repos:** boxman (`~/git/boxman` on sc1)
+- **Notes:** Script only; no video/audio artifact. Re-ran the existing scouting driver on sc1 on 2026-09-01: Packer build succeeded in 57.7s, clean boxman template rebuild + clone + SSH setup in 45.9s, packages/guest agent/hostname verified, then clone/network/workspace destroyed. See `tutorial-script.md`; source files remain in the 2026-08-08 scouting task.
+
 ### 2026-08-07 — pg-ha-boxman-trial
 
 - **Dir:** tasks/2026-08-07-pg-ha-boxman-trial/
