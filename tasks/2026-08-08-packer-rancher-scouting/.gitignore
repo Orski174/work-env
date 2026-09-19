@@ -1,0 +1,8 @@
+# generated at build/run time — not committed
+packer/http/user-data
+packer/output-*/
+packer/*.log
+packer/id_ed25519_packer*
+rancher/boxman/ssh_config
+rancher/boxman/id_ed25519_boxman*
+rancher/kubeconfig*

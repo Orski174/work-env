@@ -1,0 +1,130 @@
+# Throwaway single-node Rancher trial (scds-infra #184). Deliberately its own
+# project/network — does NOT touch the live sc1-talos cluster (shared
+# KT/demo resource with an existing open flux issue, see
+# tasks/2026-07-20-demo-172-sc1-talos/notes.md).
+#
+# Sized down given sc1's current headroom (~13Gi available at scoping time,
+# see ../../notes.md) rather than Rancher's full recommended 4CPU/8GB —
+# this is a same-day evaluation trial, not a production sizing exercise.
+version: '1.0'
+project: rancher_scouting_trial
+
+provider:
+  libvirt:
+    uri: qemu:///system
+    use_sudo: True
+    virt_install_cmd: '/bin/python3 /usr/bin/virt-install'
+    virt_clone_cmd: '/bin/python3 /usr/bin/virt-clone'
+    virsh_cmd: '/bin/virsh'
+    verbose: True
+
+templates:
+  ubuntu_base:
+    name: ubuntu-24.04-minimal-base-template-cloudinit
+    image:
+      uri: http://cloud-images-archive.ubuntu.com/releases/noble/release-20240423/ubuntu-24.04-server-cloudimg-amd64.img
+      checksum: sha256:32a9d30d18803da72f5936cf2b7b9efcb4d0bb63c67933f17e3bdfd1751de3f3
+    disk_size: 30G
+    os_variant: ubuntu24.04
+    memory: 2048
+    vcpus: 2
+    cloudinit_done_marker: /var/log/hello-cloudinit.log
+    cloudinit: |
+      #cloud-config
+      hostname: hello-cloudinit
+      manage_etc_hosts: true
+
+      network:
+        version: 2
+        ethernets:
+          default:
+            match:
+              name: "en*"
+            dhcp4: true
+            dhcp6: false
+
+      users:
+        - name: ubuntu
+          lock_passwd: false
+          groups: [sudo]
+          sudo: "ALL=(ALL) NOPASSWD:ALL"
+          shell: /bin/bash
+
+      chpasswd:
+        expire: false
+        list: |
+          ubuntu:ubuntu
+
+      ssh_pwauth: true
+      package_update: true
+      packages:
+        - qemu-guest-agent
+        - openssh-server
+        - apt-transport-https
+        - ca-certificates
+        - curl
+
+      runcmd:
+        - systemctl daemon-reload
+        - systemctl enable --now qemu-guest-agent
+        # native cloud-init `users:` only reliably works here for `ubuntu`
+        # (the image's pre-existing default_user — cloud-init merges onto
+        # it); a brand-new `admin` user via the same users: shape hit
+        # "Failed to create user admin" / cc_users_groups failures on this
+        # cloud-init version, so admin is created via plain shell instead —
+        # same workaround boxman's own docker-runtime example box uses.
+        - [ sh, -c, "id admin >/dev/null 2>&1 || useradd -m -d /admin -s /bin/bash -g admin -G sudo admin" ]
+        - [ sh, -c, "echo 'admin ALL=(ALL) NOPASSWD:ALL' > /etc/sudoers.d/admin" ]
+        - [ sh, -c, "chmod 0440 /etc/sudoers.d/admin" ]
+        - [ sh, -c, "echo 'admin:{{ env("BOXMAN_ADMIN_PASS", default="boxman") }}' | chpasswd" ]
+        - [ sh, -c, "mkdir -p /admin/.ssh && chmod 700 /admin/.ssh && chown -R admin:admin /admin /admin/.ssh" ]
+        - echo ran at $(date -Is) >> /var/log/hello-cloudinit.log
+
+workspace:
+  path: ~/workspaces/boxmandev/rancher_scouting_trial
+
+clusters:
+  cluster_1:
+    base_image: ubuntu-24.04-minimal-base-template-cloudinit
+    proxy_host: localhost
+    admin_user: admin
+    admin_pass: {{ env("BOXMAN_ADMIN_PASS", default="boxman") }}
+    admin_key_name: id_ed25519_boxman
+    ssh_config: ssh_config
+
+    networks:
+      nat1:
+        mode: nat
+        bridge:
+          stp: 'on'
+          delay: '0'
+        mac: '52:54:00:00:16:01'
+        ip:
+          address: '192.168.40.1'
+          netmask: '255.255.255.0'
+          dhcp:
+            range:
+              start: '192.168.40.2'
+              end: '192.168.40.254'
+        enable: True
+        autostart: True
+
+    vms:
+      rancher01:
+        hostname: rancher01
+        cpus:
+          sockets: 1
+          cores: 4
+          threads: 1
+        memory: 6144
+        disks:
+          - name: disk01
+            driver:
+              name: qemu
+              type: qcow2
+            target: vdb
+            size: 30720
+        network_adapters:
+          - name: adapter_1
+            link_state: 'up'
+            network_source: 'nat1'

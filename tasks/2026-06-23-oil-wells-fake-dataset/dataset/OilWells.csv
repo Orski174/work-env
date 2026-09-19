@@ -74,3 +74,15 @@ IQ-OW-072,EB-072,East Baghdad,active,sour crude,4415,1934,North Oil Company,43.8
 IQ-OW-073,BH-073,Bai Hassan,active,sour crude,4104,1940,Missan Oil Company,40.021810,31.113553
 IQ-OW-074,WQ-074,West Qurna,active,light crude,2898,1986,Demo Petroleum Co,45.344954,35.249591
 IQ-OW-075,N-075,Nassiriya,active,heavy crude,4617,1939,Iraq Drilling Company,40.987140,35.009239
+LB-OW-001,B7-001,Block 7,inactive,medium crude,4730,2024,Eni,33.873789,34.236298
+LB-OW-002,B2-002,Block 2,planned,condensate,3407,2022,QatarEnergy,33.011196,33.342984
+LB-OW-003,B2-003,Block 2,inactive,heavy crude,5823,2019,Demo Petroleum Co,33.764498,34.175832
+LB-OW-004,B1-004,Block 1,active,light crude,3523,2024,QatarEnergy,34.896057,34.396393
+LB-OW-005,B6-005,Block 6,planned,condensate,5011,2019,Demo Petroleum Co,34.372393,33.693086
+LB-OW-006,B4-006,Block 4,inactive,light crude,3717,2022,QatarEnergy,34.214927,34.415969
+LB-OW-007,B8-007,Block 8,active,medium crude,6199,2024,QatarEnergy,33.396404,33.964481
+LB-OW-008,B7-008,Block 7,inactive,heavy crude,4807,2024,QatarEnergy,33.532756,33.844347
+LB-OW-009,B9-009,Block 9,inactive,light crude,4080,2024,QatarEnergy,33.524085,33.861819
+LB-OW-010,B9-010,Block 9,active,sour crude,5344,2019,Demo Petroleum Co,33.489761,34.127554
+LB-OW-011,B6-011,Block 6,planned,condensate,5490,2021,QatarEnergy,33.286568,33.897326
+LB-OW-012,B1-012,Block 10,active,condensate,4574,2024,QatarEnergy,33.389954,34.604983

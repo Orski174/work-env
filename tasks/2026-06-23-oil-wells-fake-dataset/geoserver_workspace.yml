@@ -1,0 +1,46 @@
+# geoserver_workspace.yml — GeoServer provisioning config for the oil-wells demo.
+#
+# Schema follows cams_geospatial_platform's workspaces.yml (see
+# $REPOS_ROOT/cams_geospatial_platform/src/workspaces_spec.yml and
+# src/workspaces.yml for real examples), specifically the fields consumed by
+# src/create_workspaces_geoserver.py. Only the GeoServer-provisioning section
+# is included here — this ticket asked for the GeoServer workspace config,
+# not GeoNetwork metadata or the ISO 19110 feature catalogue (those are
+# separate concerns in that pipeline, handled by MetadataFilling.py / FC.py,
+# and weren't part of this deliverable).
+#
+# shapefile_path is relative to GeoServer's data directory (the
+# create_workspaces_geoserver.py convention: geoserver_data_path =
+# /var/lib/tomcat9/webapps/geoserver/data). Both OilWells.* and
+# OilWellProduction.* shapefiles must be placed under data/OilWells/ for
+# this config to resolve — copy dataset/*.shp,*.shx,*.dbf,*.prj,*.cpg there
+# (or output/ for a freshly regenerated set) before running
+# create_workspaces_geoserver.py against this file.
+
+oil_wells_demo:
+  store_name: oil_wells_store
+  store_description: Synthetic demo oil-well dataset (Iraq onshore + hypothetical Lebanon offshore) with an hourly production time-series sample for scds#207
+  shapefile_path: data/OilWells/
+
+  layer_name:
+    - OilWells
+    - OilWellProduction
+  layer_title:
+    - Oil Wells (Iraq + Lebanon)
+    - Oil Well Production (Hourly Sample)
+
+  abstract: >
+    Fake, seeded/reproducible oil-well point dataset for GeoServer demo loading.
+    OilWells covers 75 onshore wells in Iraq plus 12 hypothetical offshore wells
+    in Lebanon's exploration blocks. OilWellProduction is a single-well sample
+    showing how a companion CSV of hourly barrels-per-day readings (5 years,
+    ~43,830 readings) can be linked from a shapefile's attribute table.
+  keywords: oil, wells, demo, synthetic, Iraq, Lebanon, offshore, production, time series
+  crs: EPSG:4326
+  sld_path: null
+  image_url:
+    - https://cdn-icons-png.flaticon.com/128/2942/2942076.png
+    - https://cdn-icons-png.flaticon.com/128/2942/2942076.png
+  image_size:
+    - 16
+    - 20

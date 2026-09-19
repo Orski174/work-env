@@ -26,6 +26,22 @@ Create task dirs with `make new-task name=short-name`.
 - **External repos:** boxman (`~/git/boxman` on sc1)
 - **Notes:** Script only; no video/audio artifact. Re-ran the existing scouting driver on sc1 on 2026-09-01: Packer build succeeded in 57.7s, clean boxman template rebuild + clone + SSH setup in 45.9s, packages/guest agent/hostname verified, then clone/network/workspace destroyed. See `tutorial-script.md`; source files remain in the 2026-08-08 scouting task.
 
+### 2026-08-24 — mpi-tech-scout
+
+- **Dir:** tasks/2026-08-24-mpi-tech-scout/
+- **Goal:** Tech-scout MPI for potential multi-node parallel workloads on sc1: core concepts, fit against the current/planned sc1 stack, hands-on multi-node hello-world. Tracks scds-infra #236 (Vikunja Work #411), sprint-012.
+- **Status:** done
+- **External repos:** boxman (`~/git/boxman` on sc1); read-only reference to hpccluster + hpc-k8s-infra for the fit analysis
+- **Notes:** Throwaway 2-VM boxman lab (`mpi-lab`, same shape as `saltstack-lab`), OpenMPI installed post-provision, real 2-node `mpirun` job (point-to-point + collective), confirmed cross-node placement via `--display-map` + per-rank IP after a hostname-collision red herring (cloud-init hostname doesn't survive cloning). Torn down clean after. Recommendation in findings.md: pair MPI with the in-flight Slurm deployment (#249, which already stages PMIx) rather than building a standalone MPI path; Kubernetes-native (MPI operator on sc1-talos) noted as a separate track only worth pursuing for actual multi-node ML training.
+
+### 2026-08-08 — packer-rancher-scouting
+
+- **Dir:** tasks/2026-08-08-packer-rancher-scouting/
+- **Goal:** Tech-scout Packer (vs. boxman's own cloud-init `templates:` mechanism) and Rancher (vs. bare kubectl+Omni for the sc1-talos cluster). Tracks scds-infra #184, sprint-011.
+- **Status:** done
+- **External repos:** boxman (`~/git/boxman` on sc1)
+- **Notes:** Two independent sub-trials (`packer/`, `rancher/`), both on sc1, both hands-on (built+cloned a Packer image; installed Rancher on a throwaway k3s VM), both torn down after. Recommendations in README.md: Packer — adopt later, not now; Rancher — pass for now. Rancher trial deliberately never touched the live sc1-talos cluster. Hit and documented several real bugs in both tools (see notes.md) plus one incident: an overbroad `boxman destroy --templates` briefly orphaned two other tasks' (saltstack-lab, pg-ha-boxman-trial) template definitions — contained with no data loss, user confirmed the cleanup.
+
 ### 2026-08-07 — pg-ha-boxman-trial
 
 - **Dir:** tasks/2026-08-07-pg-ha-boxman-trial/

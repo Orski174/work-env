@@ -1,0 +1,16 @@
+#cloud-config
+# NoCloud seed for Packer's SSH communicator only — rendered to user-data by
+# run.sh with the ephemeral build keypair. Not related to the cloud-init
+# boxman applies later when it clones the built image.
+hostname: packer-rocky9-build
+users:
+  - name: packer
+    lock_passwd: false
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    shell: /bin/bash
+    ssh_authorized_keys:
+      - __PACKER_SSH_PUBKEY__
+ssh_pwauth: false
+package_update: false
+runcmd:
+  - systemctl restart NetworkManager || true

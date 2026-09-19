@@ -1,0 +1,120 @@
+# Proves the Packer-built qcow2 (../output-rocky9/rocky9-packer-base.qcow2)
+# works as a normal boxman template base image: clone + boot one VM from it.
+# PACKER_IMAGE_PATH is exported (absolute path) by ../run.sh before `boxman up`.
+version: '1.0'
+project: packer_scouting_test
+
+provider:
+  libvirt:
+    uri: qemu:///system
+    use_sudo: True
+    virt_install_cmd: '/bin/python3 /usr/bin/virt-install'
+    virt_clone_cmd: '/bin/python3 /usr/bin/virt-clone'
+    virsh_cmd: '/bin/virsh'
+    verbose: True
+
+templates:
+  packer_rocky9:
+    name: rocky9-packer-built-template
+    image: file://{{ env("PACKER_IMAGE_PATH") }}
+    disk_size: 20G
+    os_variant: rocky9
+    memory: 2048
+    vcpus: 2
+    cloudinit_network_config: disabled
+    cloudinit_done_marker: /var/log/hello-cloudinit.log
+    # No `packages:` here — vim/curl/qemu-guest-agent/openssh-server are
+    # already baked into the image by Packer. Everything below is genuinely
+    # per-instance (hostname/users/network), same as boxman's own template.
+    cloudinit: |
+      #cloud-config
+      hostname: packer-test-node
+      manage_etc_hosts: true
+
+      users:
+        - name: admin
+          plain_text_passwd: {{ env("BOXMAN_ADMIN_PASS", default="boxman") }}
+          lock_passwd: false
+          sudo: ALL=(ALL) NOPASSWD:ALL
+          shell: /bin/bash
+          homedir: /admin
+
+      ssh_pwauth: true
+      growpart:
+        mode: auto
+        devices: ['/']
+      resize_rootfs: true
+
+      # Rocky's qemu-guest-agent ships guest-exec blocked by default
+      # (BLOCK_RPCS) — boxman's own health-check polls guest-exec, so
+      # without this override `boxman up` fails with "Command guest-exec
+      # has been disabled" even though the agent itself is running. Packer
+      # baked the package in but didn't know to touch this file; boxman's
+      # own rocky-9 template (boxes/tiny-libvirt-rocky-9-cloudinit/conf.yml)
+      # clears it the same way for the same reason.
+      write_files:
+        - path: /etc/sysconfig/qemu-ga
+          permissions: "0644"
+          content: |
+            BLOCK_RPCS=
+
+      runcmd:
+        - touch /etc/cloud/cloud-init.disabled
+        - rm -f /etc/cloud/cloud.cfg.d/99-disable-network-config.cfg
+        - setenforce 0 || true
+        - [ sh, -c, "sed -i 's/^SELINUX=enforcing/SELINUX=disabled/' /etc/selinux/config || true" ]
+        - systemctl daemon-reload
+        - systemctl restart qemu-guest-agent || true
+        - systemctl enable --now qemu-guest-agent
+        - systemctl restart NetworkManager || true
+        - [ sh, -c, "mkdir -p /admin/.ssh && chmod 700 /admin/.ssh && chown -R admin:admin /admin/.ssh" ]
+        - [ sh, -c, "echo ran at $(date -Is) >> /var/log/hello-cloudinit.log" ]
+
+workspace:
+  path: ~/workspaces/boxmandev/packer_scouting_test
+
+clusters:
+  cluster_1:
+    base_image: rocky9-packer-built-template
+    proxy_host: localhost
+    admin_user: admin
+    admin_pass: {{ env("BOXMAN_ADMIN_PASS", default="boxman") }}
+    admin_key_name: id_ed25519_boxman
+    ssh_config: ssh_config
+
+    networks:
+      nat1:
+        mode: nat
+        bridge:
+          stp: 'on'
+          delay: '0'
+        mac: '52:54:00:00:15:01'
+        ip:
+          address: '192.168.30.1'
+          netmask: '255.255.255.0'
+          dhcp:
+            range:
+              start: '192.168.30.2'
+              end: '192.168.30.254'
+        enable: True
+        autostart: True
+
+    vms:
+      node01:
+        hostname: node01
+        cpus:
+          sockets: 1
+          cores: 2
+          threads: 1
+        memory: 2048
+        disks:
+          - name: disk01
+            driver:
+              name: qemu
+              type: qcow2
+            target: vdb
+            size: 2048
+        network_adapters:
+          - name: adapter_1
+            link_state: 'up'
+            network_source: 'nat1'
