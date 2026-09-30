@@ -1,0 +1,13 @@
+#cloud-config
+hostname: __BUILD_HOSTNAME__
+users:
+  - name: packer
+    lock_passwd: false
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    shell: /bin/bash
+    ssh_authorized_keys:
+      - __SSH_PUBLIC_KEY__
+ssh_pwauth: false
+package_update: false
+runcmd:
+  - systemctl restart NetworkManager || true

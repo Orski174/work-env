@@ -1,0 +1,17 @@
+export BOXMAN=/admin/boxman-venv/bin/boxman
+export PATH=/admin/boxman-venv/bin:/usr/local/bin:/usr/bin:/bin
+export PACKER_CACHE_DIR=/admin/packer-boxman-demo-v3/.packer-cache
+export BOXMAN_ADMIN_PASS=boxman
+unset HISTFILE
+
+cd /admin
+
+_packer_v3_prompt_status() {
+  local rc=$?
+  printf '%s\n' "$rc" > /tmp/packer_v3_last_rc
+  touch /tmp/packer_v3_prompt_ready
+}
+PROMPT_COMMAND=_packer_v3_prompt_status
+PS1='\[\e[1;36m\]demo@workstation\[\e[0m\]:\[\e[1;34m\]\w\[\e[0m\]\$ '
+
+clear

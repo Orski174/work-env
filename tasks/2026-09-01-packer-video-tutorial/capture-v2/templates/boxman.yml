@@ -1,0 +1,105 @@
+version: '1.0'
+project: __PROJECT__
+
+provider:
+  libvirt:
+    uri: qemu:///system
+    use_sudo: True
+    virt_install_cmd: '/bin/python3 /usr/bin/virt-install'
+    virt_clone_cmd: '/bin/python3 /usr/bin/virt-clone'
+    virsh_cmd: '/bin/virsh'
+    verbose: False
+
+templates:
+  rocky9_demo:
+    name: __TEMPLATE_NAME__
+    image: file://{{ env("__IMAGE_ENV__") }}
+    disk_size: 10G
+    os_variant: rocky9
+    memory: 2048
+    vcpus: 2
+    cloudinit_network_config: disabled
+    cloudinit_done_marker: /var/log/boxman-ready.log
+    cloudinit: |
+      #cloud-config
+      hostname: __TEMPLATE_HOSTNAME__
+      manage_etc_hosts: true
+
+      users:
+        - name: admin
+          plain_text_passwd: {{ env("BOXMAN_ADMIN_PASS", default="boxman") }}
+          lock_passwd: false
+          sudo: ALL=(ALL) NOPASSWD:ALL
+          shell: /bin/bash
+          homedir: /home/admin
+
+      ssh_pwauth: true
+      growpart:
+        mode: auto
+        devices: ['/']
+      resize_rootfs: true
+
+      write_files:
+        - path: /etc/sysconfig/qemu-ga
+          permissions: "0644"
+          content: |
+            BLOCK_RPCS=
+
+      runcmd:
+        - touch /etc/cloud/cloud-init.disabled
+        - rm -f /etc/cloud/cloud.cfg.d/99-disable-network-config.cfg
+        - systemctl daemon-reload
+        - systemctl restart qemu-guest-agent || true
+        - systemctl enable --now qemu-guest-agent
+        - systemctl restart NetworkManager || true
+        - [ sh, -c, "mkdir -p /home/admin/.ssh && chmod 700 /home/admin/.ssh && chown -R admin:admin /home/admin && restorecon -RF /home/admin" ]
+        - [ sh, -c, "echo ready > /var/log/boxman-ready.log" ]
+
+workspace:
+  path: __WORKSPACE_PATH__
+
+clusters:
+  demo:
+    base_image: __TEMPLATE_NAME__
+    proxy_host: localhost
+    admin_user: admin
+    admin_pass: {{ env("BOXMAN_ADMIN_PASS", default="boxman") }}
+    admin_key_name: id_ed25519_boxman
+    ssh_config: ssh_config
+
+    networks:
+      nat1:
+        mode: nat
+        bridge:
+          stp: 'on'
+          delay: '0'
+        mac: '52:54:00:00:77:01'
+        ip:
+          address: '__NETWORK_PREFIX__.1'
+          netmask: '255.255.255.0'
+          dhcp:
+            range:
+              start: '__NETWORK_PREFIX__.2'
+              end: '__NETWORK_PREFIX__.254'
+        enable: True
+        autostart: True
+
+    vms:
+      node01:
+        hostname: __VM_HOSTNAME__
+        cpus:
+          sockets: 1
+          cores: 2
+          threads: 1
+        memory: 2048
+        disks:
+          - name: disk01
+            driver:
+              name: qemu
+              type: qcow2
+            target: vdb
+            size: 2048
+        network_adapters:
+          - name: adapter_1
+            link_state: 'up'
+            network_source: nat1
