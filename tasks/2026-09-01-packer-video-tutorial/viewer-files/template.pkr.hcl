@@ -19,10 +19,10 @@ source "qemu" "rocky9" {
   disk_image   = true
 
   output_directory = var.output_dir
-  vm_name           = var.vm_name
-  format            = "qcow2"
-  disk_size         = "10240M"
-  disk_compression  = true
+  vm_name          = var.vm_name
+  format           = "qcow2"
+  disk_size        = "10240M"
+  disk_compression = true
 
   accelerator    = "kvm"
   headless       = true
@@ -38,7 +38,7 @@ source "qemu" "rocky9" {
     ["-serial", "file:packer-serial.log"]
   ]
 
-  communicator        = "ssh"
+  communicator         = "ssh"
   ssh_username         = "packer"
   ssh_private_key_file = "id_ed25519_packer"
   ssh_timeout          = "10m"

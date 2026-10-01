@@ -2,7 +2,8 @@
 # One proof: boot the built disk and query the actual guest over SSH.
 set -euo pipefail
 cd "$(dirname "$0")"
-ssh -F workspace/ssh_config demo_demo-node '
+source ./demo.env
+ssh -F workspace/ssh_config "demo_$DEMO_HOSTNAME" '
   hostname
   cat /etc/rocky-release
   rpm -q vim-enhanced curl qemu-guest-agent openssh-server

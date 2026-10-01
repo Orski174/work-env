@@ -13,6 +13,7 @@ provider:
 templates:
   rocky9_demo:
     name: __TEMPLATE_NAME__
+    workdir: __TEMPLATE_WORKDIR__
     image: file://{{ env("__IMAGE_ENV__") }}
     disk_size: 10G
     os_variant: rocky9

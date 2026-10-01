@@ -1,4 +1,4 @@
-# Files used in the v4 Packer tutorial
+# Files used in the v5 Packer tutorial
 
 This is the complete viewer bundle, independent of the capture automation.
 In the video this directory is staged as `~/packer-tutorial`.
@@ -24,7 +24,7 @@ Choose a free `192.168.N.0/24` subnet and a unique `DEMO_NAME` before booting.
 3. Inspect `template.pkr.hcl`; it does not need rewriting. In the editor,
    select/copy the complete values sheet (Ctrl+A, Ctrl+C). In the terminal run
    `cat > demo.env`, paste with Ctrl+Shift+V, then press Ctrl+D on the empty last
-   line. This copies the six environment values without retyping long content.
+   line. This copies the seven environment values without retyping long content.
    `cp packer-values.txt demo.env` is an equivalent non-GUI alternative.
 4. Run the provided scripts:
 
@@ -39,7 +39,10 @@ Choose a free `192.168.N.0/24` subnet and a unique `DEMO_NAME` before booting.
 NoCloud seed (`user-data.in`) and `boxman.yml.in`, then initializes/formats/
 validates Packer. It refuses to overwrite existing credentials. `build.sh`
 loads the four `PKR_VAR_` values and builds the qcow2. `boot.sh` points boxman at
-that image. `verify.sh` performs one SSH-based proof from the actual clone.
+that image, then sets the clone's actual hostname to `DEMO_HOSTNAME`: boxman
+otherwise retains its template hostname. `verify.sh` performs one SSH-based
+proof from the actual clone. The committed HCL is already fmt-clean; `fmt`
+remains in prepare.sh as a no-op check on the supplied file.
 The video cuts the build/boot waits and labels both time skips; do not expect
 these operations to complete in the video's playback time.
 
@@ -47,6 +50,14 @@ The demo deliberately uses passwordless guest sudo and temporary credentials.
 It is **not a production-hardening recipe**. Do not commit generated secrets,
 the NoCloud seed, workspace, cache or image output. The included `.gitignore`
 covers those artifacts (keep custom output paths out of version control too).
+In particular, `boxman.rendered.yml`, `.boxman-up.log`, and the template
+work directory `.boxman-templates/` can contain the generated password.
+`boot.sh` uses a private log rather than echoing Boxman's rendered cloud-init.
+It pre-creates those files with mode 0600, then restores the normal directory
+umask so QEMU can traverse its disk directories. Never paste generated files
+into an issue or commit.
+`__pycache__/` and Python bytecode are ignored and excluded from the staged
+viewer bundle; only tracked tutorial source files are distributed.
 
 After trying it, source `demo.env`, export `PACKER_IMAGE_PATH` and
 `BOXMAN_ADMIN_PASS` as shown in `boot.sh`, then use

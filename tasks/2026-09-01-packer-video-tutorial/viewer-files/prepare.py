@@ -13,11 +13,12 @@ Path("http/user-data").write_text(seed)
 values = {
     "__PROJECT__": name,
     "__TEMPLATE_NAME__": f"{name}-template",
+    "__TEMPLATE_WORKDIR__": str(root / ".boxman-templates"),
     "__IMAGE_ENV__": "PACKER_IMAGE_PATH",
     "__TEMPLATE_HOSTNAME__": "packer-template",
     "__WORKSPACE_PATH__": str(root / "workspace"),
     "__NETWORK_PREFIX__": os.environ["DEMO_SUBNET"],
-    "__VM_HOSTNAME__": "demo-node",
+    "__VM_HOSTNAME__": os.environ["DEMO_HOSTNAME"],
 }
 config = Path("boxman.yml.in").read_text()
 for placeholder, value in values.items():

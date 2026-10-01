@@ -12,9 +12,13 @@ failure modes found during scouting.
 
 ## Deliverable
 
+- [v5-tutorial-script.md](v5-tutorial-script.md) — review fixes, exact timestamp
+  evidence, caption rates, final decode record and handoff paths.
+- [capture-v5/](capture-v5/) — clean tutorial-only dialogs, source-only staging,
+  bounded caption pace, cut-aligned TIME SKIP labels and secret-file auditing.
 - [v4-tutorial-script.md](v4-tutorial-script.md) — 3:11.92 desktop redo,
   frame-derived caption map, verification record and handoff paths.
-- [viewer-files/](viewer-files/) — self-contained v4 templates, values sheet,
+- [viewer-files/](viewer-files/) — self-contained v5 templates, values sheet,
   and short prepare/build/boot/verify scripts a viewer can use directly.
 - [capture-v4/](capture-v4/) — desktop capture, review-gated copy/paste actions,
   frame-accurate action-log trim, separate caption band, and evidence checks.
@@ -36,7 +40,7 @@ The original September 1 script used the proven files in the
 - [run.sh](../2026-08-08-packer-rancher-scouting/packer/run.sh)
 - [scouting notes](../2026-08-08-packer-rancher-scouting/notes.md)
 
-The later v3/v4 bundles are self-contained; v4 viewers do not need the scouting
+The later bundles are self-contained; v5 viewers do not need the scouting
 directory or the capture VM's private files.
 
 ## Validation on 2026-09-01

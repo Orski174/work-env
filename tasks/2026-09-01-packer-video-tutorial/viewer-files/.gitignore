@@ -3,8 +3,13 @@ demo.env
 id_ed25519_packer*
 http/
 boxman.yml
+boxman.rendered.yml
+*.rendered.yml
+.boxman-up.log
+.boxman-templates/
 workspace/
 .packer-cache/
 output-*/
 packer-serial.log
 __pycache__/
+*.py[cod]
