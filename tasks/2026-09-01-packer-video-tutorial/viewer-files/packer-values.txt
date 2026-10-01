@@ -1,0 +1,13 @@
+# Packer + boxman: values for this disposable demo
+# Copy this sheet into demo.env; change only your values.
+
+export PKR_VAR_image_url="https://download.rockylinux.org/pub/rocky/9/images/x86_64/Rocky-9-GenericCloud-Base-9.8-20260525.0.x86_64.qcow2"
+export PKR_VAR_image_sha="92c206cc6f790c61583247eefe87890f8828420662c17cacf247cec78ab4eec8"
+export PKR_VAR_vm_name="rocky9-demo.qcow2"
+export PKR_VAR_output_dir="output-rocky9"
+export DEMO_NAME="packer_v4"
+export DEMO_SUBNET="192.168.79"
+
+# Credentials: <generated locally by prepare.sh>
+# packer: temporary SSH key; admin: throwaway password.
+# Use a free subnet; this example is NOT production hardening.

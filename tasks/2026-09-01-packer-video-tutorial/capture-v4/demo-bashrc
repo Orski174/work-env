@@ -1,0 +1,5 @@
+export PATH=/admin/boxman-venv/bin:/usr/local/bin:/usr/bin:/bin
+unset HISTFILE
+cd /admin
+PS1='\[\e[1;32m\]demo\[\e[0m\]:\[\e[1;34m\]\w\[\e[0m\] $ '
+PROMPT_COMMAND='rc=$?; printf "%s\n" "$rc" > /tmp/packer_v4_last_rc; touch /tmp/packer_v4_prompt_ready'

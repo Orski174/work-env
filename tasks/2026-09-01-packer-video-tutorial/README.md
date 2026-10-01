@@ -12,6 +12,12 @@ failure modes found during scouting.
 
 ## Deliverable
 
+- [v4-tutorial-script.md](v4-tutorial-script.md) — 3:11.92 desktop redo,
+  frame-derived caption map, verification record and handoff paths.
+- [viewer-files/](viewer-files/) — self-contained v4 templates, values sheet,
+  and short prepare/build/boot/verify scripts a viewer can use directly.
+- [capture-v4/](capture-v4/) — desktop capture, review-gated copy/paste actions,
+  frame-accurate action-log trim, separate caption band, and evidence checks.
 - [tutorial-script.md](tutorial-script.md) — narration, exact terminal commands,
   representative expected output, recording cues, verification, and teardown.
 - [polished-tutorial-script.md](polished-tutorial-script.md) — condensed 4:55
@@ -22,14 +28,16 @@ failure modes found during scouting.
   screen-demo action-log capture/trim pipeline, and dedicated-band caption
   renderer used for the final take.
 
-This task deliberately does not copy the Packer HCL, NoCloud seed, boxman config,
-or driver. It uses the proven files in the
+The original September 1 script used the proven files in the
 [2026-08-08 scouting task](../2026-08-08-packer-rancher-scouting/README.md):
 
 - [template.pkr.hcl](../2026-08-08-packer-rancher-scouting/packer/template.pkr.hcl)
 - [boxman-test/conf.yml](../2026-08-08-packer-rancher-scouting/packer/boxman-test/conf.yml)
 - [run.sh](../2026-08-08-packer-rancher-scouting/packer/run.sh)
 - [scouting notes](../2026-08-08-packer-rancher-scouting/notes.md)
+
+The later v3/v4 bundles are self-contained; v4 viewers do not need the scouting
+directory or the capture VM's private files.
 
 ## Validation on 2026-09-01
 

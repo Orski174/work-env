@@ -1,0 +1,10 @@
+demo.env
+.demo-password
+id_ed25519_packer*
+http/
+boxman.yml
+workspace/
+.packer-cache/
+output-*/
+packer-serial.log
+__pycache__/
